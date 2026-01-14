@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Misi Segiempat — Quiz Adventure</title>
+  <style>
+    :root{
+      --bg0:#0b1020; --bg1:#0f1730; --bg2:#0b1a16;
+      --ink:#e8eefc; --muted:#a7b3d3;
+      --card: rgba(18, 26, 52, .70);
+      --stroke: rgba(232, 238, 252, .12);
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --good:#34d399; --bad:#fb7185; --pri:#60a5fa; --pri2:#a78bfa; --warn:#fbbf24;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:
+        radial-gradient(900px 560px at 18% 0%, rgba(167,139,250,.18), transparent 60%),
+        radial-gradient(900px 560px at 88% 10%, rgba(96,165,250,.16), transparent 60%),
+        radial-gradient(900px 560px at 55% 115%, rgba(52,211,153,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg2));
+      min-height:100vh;
+    }
+    .wrap{max-width:1040px;margin:0 auto;padding:14px}
+    .topbar{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      padding:12px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    h1{margin:0;font-size:18px}
+    .sub{margin:2px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
+    .hud{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .pill{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      display:flex;gap:8px;align-items:center;
+      color: var(--ink);
+    }
+    .pill b{font-size:12px}
+    .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      border-radius:16px;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;-webkit-user-select:none;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(167,139,250,.95), rgba(96,165,250,.95));
+      color:#0a1020; border-color:transparent;
+    }
+    .btn.good{background: rgba(52,211,153,.10); border-color: rgba(52,211,153,.28)}
+    .btn.warn{background: rgba(251,191,36,.10); border-color: rgba(251,191,36,.28)}
+    .btn.bad{background: rgba(251,113,133,.10); border-color: rgba(251,113,133,.28)}
+    .main{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap:12px;
+    }
+    @media (max-width: 920px){ .main{grid-template-columns:1fr} }
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      padding:12px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .map{
+      position:relative;
+      height:520px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      overflow:hidden;
+      background:
+        linear-gradient(0deg, rgba(255,255,255,.04), rgba(255,255,255,.04)),
+        radial-gradient(900px 600px at 20% 25%, rgba(96,165,250,.14), transparent 58%),
+        radial-gradient(900px 600px at 85% 25%, rgba(167,139,250,.12), transparent 58%),
+        radial-gradient(900px 600px at 50% 105%, rgba(52,211,153,.10), transparent 60%);
+      box-shadow: 0 18px 55px rgba(0,0,0,.35) inset;
+    }
+    .path{position:absolute; inset:0; pointer-events:none;}
+    .node{
+      position:absolute;
+      width:78px; height:78px;
+      border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      border:2px solid rgba(232,238,252,.14);
+      background: rgba(255,255,255,.06);
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+      cursor:pointer;
+      user-select:none;-webkit-user-select:none;
+      transition: transform .18s ease, filter .18s ease;
+    }
+    .node:hover{transform: translateY(-2px)}
+    .node .num{
+      width:46px;height:46px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:1000;font-size:16px;
+      border:1px solid rgba(232,238,252,.14);
+      background: rgba(255,255,255,.07);
+      color: var(--ink);
+    }
+    .node .star{
+      position:absolute; bottom:-8px; right:-8px;
+      width:34px;height:34px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(232,238,252,.14);
+      background: rgba(10,16,32,.88);
+      box-shadow: 0 12px 25px rgba(0,0,0,.35);
+      font-size:16px;
+    }
+    .node.locked{filter: grayscale(.4) opacity(.65); cursor:not-allowed}
+    .node.done{border-color: rgba(52,211,153,.40)}
+    .node.done .num{background: rgba(52,211,153,.10); border-color: rgba(52,211,153,.22)}
+    .node.current{
+      outline: 6px solid rgba(96,165,250,.14);
+      animation: pulse 1.3s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{transform: scale(1)}50%{transform: scale(1.04)}}
+
+    .avatarRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .avatar{
+      width:54px;height:54px;border-radius:16px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      display:flex;align-items:center;justify-content:center;
+      font-size:28px;
+      cursor:pointer;
+    }
+    .avatar.sel{outline:4px solid rgba(96,165,250,.16)}
+    .field{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    input[type="text"]{
+      flex:1; min-width:180px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      font-weight:750;
+      color: var(--ink);
+      outline: none;
+    }
+    input[type="text"]::placeholder{color: rgba(232,238,252,.55)}
+    .tips{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.45}
+    .power{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;}
+    .badge{
+      padding:8px 10px;border-radius:16px;border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      font-size:12px;color:var(--muted);
+      display:flex;justify-content:space-between;gap:10px;align-items:center;
+    }
+    .badge b{color:var(--ink)}
+    .mini{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+
+    .overlay{
+      position:fixed; inset:0;
+      display:none; align-items:center; justify-content:center;
+      padding:14px;
+      background: rgba(0,0,0,.60);
+      backdrop-filter: blur(10px);
+      z-index:9999;
+    }
+    .qCard{
+      width:min(900px, 100%);
+      border-radius:22px;
+      border:1px solid rgba(232,238,252,.14);
+      background: rgba(12, 18, 38, .92);
+      box-shadow: 0 28px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .qTop{
+      padding:12px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:
+        radial-gradient(700px 220px at 0% 0%, rgba(96,165,250,.18), transparent 60%),
+        radial-gradient(700px 220px at 100% 0%, rgba(167,139,250,.14), transparent 60%),
+        rgba(255,255,255,.02);
+      border-bottom:1px solid rgba(232,238,252,.10);
+    }
+    .qTop h2{margin:0;font-size:16px}
+    .tag{padding:6px 10px;border-radius:999px;border:1px solid rgba(232,238,252,.14);background:rgba(255,255,255,.06);font-size:12px;color:rgba(232,238,252,.88)}
+    .qBody{padding:14px}
+    .prompt{margin:0 0 12px;line-height:1.58;font-weight:950;color:rgba(232,238,252,.95)}
+    .choices{display:grid;grid-template-columns:1fr;gap:10px}
+    @media (min-width: 860px){ .choices{grid-template-columns:1fr 1fr} }
+    .choice{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(232,238,252,.14);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+      font-weight:850;
+      display:flex; gap:10px; align-items:flex-start;
+      color: rgba(232,238,252,.92);
+    }
+    .choice:hover{border-color: rgba(232,238,252,.28); background: rgba(255,255,255,.08)}
+    .choice:active{transform:scale(.99)}
+    .choice .letter{
+      width:30px;height:30px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(232,238,252,.14);
+      background: rgba(0,0,0,.18);
+      flex:0 0 auto;
+    }
+    .choice.correct{border-color: rgba(52,211,153,.70); box-shadow: 0 0 0 3px rgba(52,211,153,.12) inset;}
+    .choice.wrong{border-color: rgba(251,113,133,.70); box-shadow: 0 0 0 3px rgba(251,113,133,.10) inset;}
+
+    .feedback{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(232,238,252,.12);
+      background: rgba(255,255,255,.06);
+      display:none;
+      color: rgba(232,238,252,.90);
+    }
+    .feedback .line{margin:6px 0}
+    .muted{color:rgba(167,179,211,.92);font-size:12px;line-height:1.45}
+    .qFoot{
+      padding:12px 14px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      border-top:1px solid rgba(232,238,252,.10);
+      background: rgba(255,255,255,.02);
+    }
+
+    canvas#fx{position:fixed; inset:0; pointer-events:none; z-index:9998;}
+
+    .startOverlay{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      padding:14px;
+      background:
+        radial-gradient(900px 520px at 20% 0%, rgba(167,139,250,.20), transparent 60%),
+        radial-gradient(900px 520px at 90% 10%, rgba(96,165,250,.18), transparent 60%),
+        rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
+      z-index:10000;
+    }
+    .startCard{
+      width:min(860px,100%);
+      border-radius:22px;
+      border:1px solid rgba(232,238,252,.12);
+      background: rgba(12, 18, 38, .92);
+      box-shadow: 0 28px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .startHead{
+      padding:14px 14px 12px;
+      background:
+        radial-gradient(780px 240px at 0% 0%, rgba(96,165,250,.18), transparent 60%),
+        radial-gradient(780px 240px at 100% 0%, rgba(167,139,250,.14), transparent 60%),
+        rgba(255,255,255,.02);
+      border-bottom:1px solid rgba(232,238,252,.10);
+    }
+    .startHead h2{margin:0 0 4px;font-size:18px}
+    .startHead p{margin:0;color:rgba(167,179,211,.92);font-size:12px;line-height:1.4}
+    .startBody{padding:14px}
+    .startGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 820px){ .startGrid{grid-template-columns:1fr} }
+    .callout{
+      border-radius:18px;
+      border:1px solid rgba(232,238,252,.12);
+      background: rgba(255,255,255,.06);
+      padding:12px;
+      color:rgba(232,238,252,.92);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .vol{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      font-size:12px;
+    }
+    input[type="range"]{width:110px;accent-color: var(--pri);}
+</style>
+</head>
+<body>
+  <canvas id="fx"></canvas>
+
+  <div class="startOverlay" id="startOverlay">
+    <div class="startCard">
+      <div class="startHead">
+        <h2>🌙 Misi Segiempat — Quiz Adventure</h2>
+        <p>Permainan kuis interaktif materi bangun datar segiempat untuk kelas VII SMP (tanpa penanda waktu).</p>
+      </div>
+      <div class="startBody">
+        <div class="startGrid">
+          <div class="callout">
+            <b>Petunjuk penggunaan:</b><br/>
+            • Pilih pos yang menyala, lalu jawab soal.<br/>
+            • Jawaban benar akan membuka pos berikutnya.<br/>
+            • Dalam permainan tersedia 3 nyawa. Setiap jawaban yang salah akan mengurangi 1 nyawa.<br/>
+            • Tersedia bantuan: <b>Pelindung</b> (terbatas).
+          </div>
+
+          <div class="callout">
+            <b>Pilih karakter dan masukkan nama:</b>
+            <div class="avatarRow" style="margin-top:10px" id="avatarRow"></div>
+            <div class="field">
+              <input id="playerName" type="text" placeholder="Nama pemain (contoh: Aulia)" maxlength="18" />
+              <button class="btn primary" id="btnStart">Mulai</button>
+            </div>
+            <div class="tips">
+              Catatan: suara/musik biasanya aktif setelah interaksi pertama (ketentuan peramban).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>🏫 Misi Segiempat — Bangun Datar Segiempat (Kelas VII)</h1>
+        <div class="sub">Selesaikan pos 1 sampai 10 untuk menyelesaikan seluruh misi.</div>
+      </div>
+
+      <div class="hud">
+        <div class="pill">👤 <span id="hudPlayer"><b>-</b></span></div>
+        <div class="pill">❤ Nyawa: <b id="hudLives">3</b></div>
+        <div class="pill">⭐ Skor: <b id="hudScore">0</b></div>
+        <div class="pill">🔥 Kombo: <b id="hudStreak">0</b></div>
+        <div class="pill">🏁 Pos: <b id="hudProgress">0/10</b></div>
+
+        <button class="btn" id="btnSound">🔊 Efek</button>
+        <button class="btn" id="btnMusic">🎵 Musik</button>
+        <div class="vol" title="Volume musik">
+          🔉 <input id="vol" type="range" min="0" max="100" value="55" />
+        </div>
+        <button class="btn warn" id="btnReset">↻ Atur Ulang</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="card">
+        <div class="muted" id="statusText" style="margin:0 0 8px">Status: Siap memulai. Silakan kerjakan Pos 1.</div>
+        <div class="map" id="map">
+          <svg class="path" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path id="pathLine" d="" fill="none" stroke="rgba(232,238,252,.16)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="1.6 1.4"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:1000">🎮 Panel Bantuan</div>
+            <div class="muted">Fitur permainan; gunakan bila diperlukan.</div>
+          </div>
+          <div class="pill">🏆 Skor Terbaik: <b id="bestScore">0</b></div>
+        </div>
+
+        <div class="power">
+          <button class="btn" id="btnShield">🛡️ Pelindung (<span id="shieldLeft">1</span>)</button>
+          <button class="btn" id="btnInfo">📌 Ringkasan Materi</button>
+          <button class="btn bad" id="btnMuteQuick">🔕 Senyap</button>
+        </div>
+
+        <div class="mini">
+          <div class="badge"><span>🎯 Target skor</span><b id="targetScore">80</b></div>
+          <div class="badge"><span>📘 Materi</span><b>Segiempat</b></div>
+        </div>
+
+        <div class="tips" style="margin-top:12px" id="sideTips">
+          <b>Aturan skor:</b> jawaban benar +10, bonus kombo +2 setiap benar berturut-turut (maksimum +10).<br/>
+          <b>Pelindung:</b> dapat digunakan 1 kali untuk menahan 1 kesalahan (nyawa tidak berkurang).<br/>
+          <b>Tanpa penanda waktu:</b> fokus pada pemahaman konsep terlebih dahulu.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="qCard">
+      <div class="qTop">
+        <h2 id="qTitle">Soal</h2>
+        <span class="tag" id="qTag">Pos</span>
+        <span class="tag">Tanpa penanda waktu</span>
+      </div>
+
+      <div class="qBody">
+        <div class="prompt" id="qPrompt"></div>
+        <div class="choices" id="choices"></div>
+
+        <div class="feedback" id="feedback">
+          <div class="line" id="fbMain"></div>
+          <div class="line muted" id="fbExplain"></div>
+        </div>
+      </div>
+
+      <div class="qFoot">
+        <div class="muted" id="miniHint">Informasi akan ditampilkan di sini.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn bad" id="btnQuit">Tutup</button>
+          <button class="btn primary" id="btnContinue">Lanjut</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      {prompt:"Bangun datar yang memiliki dua pasang sisi berhadapan sejajar dan sama panjang adalah …",
+        choices:["Trapesium","Layang-layang","Jajar genjang","Belah ketupat"], correct:2,
+        explain:"Jajar genjang memiliki dua pasang sisi berhadapan sejajar dan sama panjang."},
+      {prompt:"“Bangun datar ini memiliki empat sisi sama panjang dan diagonalnya saling tegak lurus.” Bangun datar yang dimaksud adalah …",
+        choices:["Persegi panjang","Jajar genjang","Belah ketupat","Trapesium"], correct:2,
+        explain:"Belah ketupat memiliki empat sisi sama panjang dan diagonalnya saling tegak lurus."},
+      {prompt:"Sebuah lapangan berbentuk persegi panjang memiliki panjang 20 m dan lebar 15 m. Luas lapangan tersebut adalah …",
+        choices:["150 m²","300 m²","350 m²","600 m²"], correct:1,
+        explain:"Luas persegi panjang: L = p × l = 20 × 15 = 300 m²."},
+      {prompt:"Sebuah taman berbentuk trapesium memiliki sisi sejajar 14 m dan 10 m serta tinggi 6 m. Langkah yang tepat untuk menentukan luas taman adalah …",
+        choices:["Menjumlahkan semua sisi lalu dibagi 2","Mengalikan kedua sisi sejajar","Menjumlahkan sisi sejajar, dikalikan tinggi, lalu dibagi 2","Mengalikan sisi sejajar terpanjang dengan tinggi"],
+        correct:2, explain:"Luas trapesium: L = ½(a+b)×t (jumlah sisi sejajar, kali tinggi, bagi 2)."},
+      {prompt:"Ana menghitung luas belah ketupat dengan diagonal 12 cm dan 16 cm: L = 12 × 16 = 192 cm². Kesalahan Ana terletak pada …",
+        choices:["Salah memilih rumus","Tidak membagi hasil perkalian dengan 2","Salah mengukur diagonal","Salah menentukan satuan"],
+        correct:1, explain:"Seharusnya L = ½×d1×d2 = ½×12×16 = 96 cm². Ana lupa membagi hasil perkalian dengan 2."},
+      {prompt:"Sebuah taman sekolah berbentuk persegi dengan luas 64 m². Panjang sisi taman yang tepat adalah …",
+        choices:["6 m","7 m","8 m","9 m"], correct:2,
+        explain:"Luas persegi: L = s² → s = √64 = 8 m."},
+      {prompt:"Sebuah kolam ikan berbentuk trapesium memiliki luas 72 m² dan tinggi 6 m. Jumlah panjang dua sisi sejajar kolam adalah …",
+        choices:["12 m","18 m","24 m","30 m"], correct:2,
+        explain:"L = ½(a+b)×t → (a+b) = 2L/t = 2×72/6 = 24 m."},
+      {prompt:"Hiasan dinding berbentuk layang-layang memiliki luas 120 cm². Jika salah satu diagonalnya 20 cm, panjang diagonal lainnya adalah …",
+        choices:["8 cm","12 cm","16 cm","20 cm"], correct:1,
+        explain:"L = ½×d1×d2 → d2 = 2L/d1 = 240/20 = 12 cm."},
+      {prompt:"Papan reklame berbentuk jajar genjang memiliki luas 150 m². Jika tinggi 10 m, panjang alas yang mungkin adalah …",
+        choices:["10 m","12 m","15 m","20 m"], correct:2,
+        explain:"L = alas × tinggi → alas = 150/10 = 15 m."},
+      {prompt:"Meja belajar berbentuk persegi dengan keliling 96 cm. Panjang sisi meja adalah …",
+        choices:["20 cm","22 cm","24 cm","26 cm"], correct:2,
+        explain:"Keliling persegi: K = 4s → s = 96/4 = 24 cm."},
+    ];
+
+    const STATE = {
+      name: "Pemain", avatar: "🧑‍🎓",
+      sfxOn: true, musicOn: true,
+      lives: 3, score: 0, streak: 0, progress: 0, unlocked: 0,
+      done: Array(10).fill(false),
+      qIndex: null, answered: false,
+      restartPending: false,
+    };
+
+    const startOverlay = document.getElementById('startOverlay');
+    const avatarRow = document.getElementById('avatarRow');
+    const playerName = document.getElementById('playerName');
+    const btnStart = document.getElementById('btnStart');
+
+    const hudPlayer = document.getElementById('hudPlayer');
+    const hudLives = document.getElementById('hudLives');
+    const hudScore = document.getElementById('hudScore');
+    const hudStreak = document.getElementById('hudStreak');
+    const hudProgress = document.getElementById('hudProgress');
+
+    const bestScoreEl = document.getElementById('bestScore');
+    const statusText = document.getElementById('statusText');
+
+    const btnSound = document.getElementById('btnSound');
+    const btnMusic = document.getElementById('btnMusic');
+    const vol = document.getElementById('vol');
+    const btnReset = document.getElementById('btnReset');    const btnShield = document.getElementById('btnShield');
+    const btnInfo = document.getElementById('btnInfo');
+    const btnMuteQuick = document.getElementById('btnMuteQuick');    const shieldLeftEl = document.getElementById('shieldLeft');
+
+    const overlay = document.getElementById('overlay');
+    const qTitle = document.getElementById('qTitle');
+    const qTag = document.getElementById('qTag');
+    const qPrompt = document.getElementById('qPrompt');
+    const choices = document.getElementById('choices');
+
+    const feedback = document.getElementById('feedback');
+    const fbMain = document.getElementById('fbMain');
+    const fbExplain = document.getElementById('fbExplain');
+    const btnQuit = document.getElementById('btnQuit');
+    const btnContinue = document.getElementById('btnContinue');
+
+    const miniHint = document.getElementById('miniHint');    const sideTips = document.getElementById('sideTips');
+
+    const map = document.getElementById('map');
+    const pathLine = document.getElementById('pathLine');
+
+    function setStatus(text){ statusText.textContent = "Status: " + text; }
+
+    // ===== AUDIO (lebih terdengar) =====
+    let audioCtx = null;
+    let musicMaster = null, padGain = null, noiseSrc = null, padOscs = [];
+    let musicStarted = false, chordTimer = null;
+
+    function ensureAudio(){
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function beep(kind="good"){
+      if(!STATE.sfxOn) return;
+      ensureAudio();
+      if(!audioCtx) return;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      const t = audioCtx.currentTime;
+      o.type = "triangle";
+      const base = kind === "good" ? 660 : 240;
+      o.frequency.setValueAtTime(base, t);
+      o.frequency.exponentialRampToValueAtTime(kind === "good" ? 880 : 180, t + 0.12);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.26, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.20);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t); o.stop(t + 0.22);
+    }
+
+    function buildNoiseBuffer(){
+      const dur = 2.0;
+      const sr = audioCtx.sampleRate;
+      const buf = audioCtx.createBuffer(1, Math.floor(sr * dur), sr);
+      const data = buf.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i] = (Math.random()*2 - 1) * 0.7;
+      return buf;
+    }
+
+    function stopMusic(){
+      if(!musicStarted) return;
+      if(chordTimer){ clearInterval(chordTimer); chordTimer = null; }
+      padOscs.forEach(o=>{ try{o.stop();}catch(e){} });
+      padOscs = [];
+      if(noiseSrc){ try{noiseSrc.stop();}catch(e){} noiseSrc = null; }
+      musicStarted = false;
+    }
+
+    function applyMusicVolume(){
+      if(!musicMaster || !audioCtx) return;
+      const v = (Number(vol.value)/100) * 0.65;
+      musicMaster.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+    }
+
+    function startMusic(){
+      ensureAudio();
+      if(!audioCtx || musicStarted) return;
+
+      musicMaster = audioCtx.createGain();
+      musicMaster.gain.value = (Number(vol.value)/100) * 0.65;
+      musicMaster.connect(audioCtx.destination);
+
+      padGain = audioCtx.createGain();
+      padGain.gain.value = 0.34;
+
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass"; lp.frequency.value = 1100; lp.Q.value = 0.55;
+
+      const delay = audioCtx.createDelay(0.45);
+      delay.delayTime.value = 0.20;
+      const fb = audioCtx.createGain(); fb.gain.value = 0.28;
+      delay.connect(fb).connect(delay);
+
+      padGain.connect(lp).connect(delay).connect(musicMaster);
+      lp.connect(musicMaster);
+
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = buildNoiseBuffer(); nSrc.loop = true;
+      const nLP = audioCtx.createBiquadFilter();
+      nLP.type = "lowpass"; nLP.frequency.value = 750; nLP.Q.value = 0.25;
+      const noiseGain = audioCtx.createGain(); noiseGain.gain.value = 0.040;
+      nSrc.connect(nLP).connect(noiseGain).connect(musicMaster);
+      nSrc.start(); noiseSrc = nSrc;
+
+      const chords = [
+        [261.63, 329.63, 392.00, 493.88],
+        [220.00, 261.63, 329.63, 392.00],
+        [174.61, 220.00, 261.63, 329.63],
+        [196.00, 246.94, 293.66, 392.00],
+      ];
+      let idx = 0;
+
+      function setChord(freqs){
+        padOscs.forEach(o=>{ try{o.stop();}catch(e){} }); padOscs = [];
+        const t = audioCtx.currentTime;
+        const attack = 1.0;
+
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        lfo.type = "sine"; lfo.frequency.value = 0.10; lfoGain.gain.value = 7;
+        lfo.connect(lfoGain);
+
+        padGain.gain.cancelScheduledValues(t);
+        padGain.gain.setValueAtTime(0.0001, t);
+        padGain.gain.exponentialRampToValueAtTime(0.34, t + attack);
+
+        freqs.forEach((f, k)=>{
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.type = k % 2 === 0 ? "sine" : "triangle";
+          o.frequency.setValueAtTime(f, t);
+          o.detune.setValueAtTime((k-1.5)*3, t);
+          lfoGain.connect(o.frequency);
+
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.13, t + attack);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 9.0);
+
+          o.connect(g).connect(padGain);
+          o.start(t); o.stop(t + 9.6);
+          padOscs.push(o);
+        });
+
+        lfo.start(t); lfo.stop(t + 9.8);
+      }
+
+      setChord(chords[idx]);
+      chordTimer = setInterval(()=>{
+        if(!musicStarted) return;
+        idx = (idx + 1) % chords.length;
+        setChord(chords[idx]);
+      }, 9200);
+
+      musicStarted = true;
+    }
+
+    vol.addEventListener("input", ()=>{ if(audioCtx) applyMusicVolume(); });
+
+    // ===== CONFETTI =====
+    const fx = document.getElementById('fx');
+    const fctx = fx.getContext('2d');
+    const confetti = [];
+    function resizeFX(){ fx.width = window.innerWidth * devicePixelRatio; fx.height = window.innerHeight * devicePixelRatio; }
+    window.addEventListener('resize', resizeFX); resizeFX();
+    function spawnConfetti(good=true){
+      const n = 70;
+      for(let i=0;i<n;i++){
+        confetti.push({
+          x:(window.innerWidth/2)*devicePixelRatio, y:(window.innerHeight/2)*devicePixelRatio,
+          vx:(Math.random()*2-1)*(7*devicePixelRatio),
+          vy:(Math.random()*2-1)*(9*devicePixelRatio)-(5*devicePixelRatio),
+          g:(0.22+Math.random()*0.14)*devicePixelRatio,
+          s:(3+Math.random()*5)*devicePixelRatio,
+          life:60+Math.random()*55,
+          hue: good ? 140 + Math.random()*35 : (350 + Math.random()*25),
+          a:1
+        });
+      }
+    }
+    function drawFX(){
+      requestAnimationFrame(drawFX);
+      fctx.clearRect(0,0,fx.width,fx.height);
+      for(let i=confetti.length-1;i>=0;i--){
+        const p = confetti[i];
+        p.x+=p.vx; p.y+=p.vy; p.vy+=p.g;
+        p.life-=1; p.a=Math.max(0,p.life/110);
+        if(p.life<=0){ confetti.splice(i,1); continue; }
+        fctx.globalAlpha=p.a;
+        fctx.fillStyle=`hsla(${p.hue}, 85%, 60%, ${p.a})`;
+        fctx.fillRect(p.x,p.y,p.s,p.s);
+      }
+      fctx.globalAlpha=1;
+    }
+    drawFX();
+
+    // ===== MAP =====
+    const NODE_POS = [
+      {x:12,y:78},{x:30,y:62},{x:48,y:76},{x:66,y:58},{x:84,y:72},
+      {x:86,y:40},{x:68,y:34},{x:50,y:40},{x:32,y:30},{x:14,y:22}
+    ];
+    function buildPathD(){
+      let d="";
+      for(let i=0;i<NODE_POS.length;i++){
+        const p=NODE_POS[i];
+        d += (i===0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`);
+      }
+      return d;
+    }
+    pathLine.setAttribute("d", buildPathD());
+
+    function bestScoreGet(){ return Number(localStorage.getItem("misi_segiempat_best") || "0"); }
+    function bestScoreSet(v){ localStorage.setItem("misi_segiempat_best", String(v)); }
+    function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+    function setHUD(){
+      hudPlayer.innerHTML = `<b>${STATE.avatar} ${STATE.name}</b>`;
+      hudLives.textContent = String(STATE.lives);
+      hudScore.textContent = String(STATE.score);
+      hudStreak.textContent = String(STATE.streak);
+      hudProgress.textContent = `${STATE.progress}/10`;      shieldLeftEl.textContent = String(STATE.shieldLeft);
+      bestScoreEl.textContent = String(bestScoreGet());
+      btnSound.textContent = STATE.sfxOn ? "🔊 Efek: ON" : "🔇 Efek: OFF";
+      btnMusic.textContent = STATE.musicOn ? "🎵 Musik: ON" : "🎵 Musik: OFF";
+      btnShield.textContent = STATE.shieldActive ? "🛡️ Aktif" : `🛡️ Pelindung (${STATE.shieldLeft})`;
+    }
+
+    function resetGame(){
+      STATE.restartPending = false;
+      STATE.lives=3; STATE.score=0; STATE.streak=0; STATE.progress=0; STATE.unlocked=0;
+      STATE.done=Array(10).fill(false);STATE.shieldLeft=1; STATE.shieldActive=false;
+      closeQuiz(); renderMap(); setHUD();
+      setStatus("Permainan diatur ulang. Silakan kerjakan Pos 1.");
+      miniHint.textContent="Informasi akan ditampilkan di sini.";
+      sideTips.innerHTML = `<b>Aturan skor:</b> jawaban benar +10, bonus kombo +2 setiap benar berturut-turut (maksimum +10).<br/>
+        <b>Pelindung:</b> dapat digunakan 1 kali untuk menahan 1 kesalahan (nyawa tidak berkurang).<br/>
+        <b>Tanpa penanda waktu:</b> fokus pada pemahaman konsep terlebih dahulu.`;
+    }
+
+    const AVATARS=["🧑‍🎓","👩‍🏫","🧠","🐱","🐼","🦊","🐸","🤖"];
+    function renderAvatars(){
+      avatarRow.innerHTML="";
+      AVATARS.forEach(a=>{
+        const div=document.createElement("div");
+        div.className="avatar"+(a===STATE.avatar?" sel":"");
+        div.textContent=a;
+        div.addEventListener("click",()=>{ STATE.avatar=a; renderAvatars(); });
+        avatarRow.appendChild(div);
+      });
+    }
+    renderAvatars();
+
+    btnStart.addEventListener("click",()=>{
+      const name=(playerName.value||"").trim();
+      STATE.name=name?name:"Pemain";
+      startOverlay.style.display="none";
+      ensureAudio();
+      if(STATE.musicOn) startMusic();
+      applyMusicVolume();
+      setHUD(); renderMap();
+      setStatus("Silakan pilih Pos 1 yang menyala.");
+    });
+
+    function renderMap(){
+      map.querySelectorAll(".node").forEach(n=>n.remove());
+      for(let i=0;i<10;i++){
+        const p=NODE_POS[i];
+        const node=document.createElement("div");
+        node.className="node";
+        const locked=(i>STATE.unlocked);
+        const done=STATE.done[i];
+        if(locked) node.classList.add("locked");
+        if(done) node.classList.add("done");
+        if(i===STATE.unlocked && !done) node.classList.add("current");
+        node.style.left=`calc(${p.x}% - 39px)`;
+        node.style.top=`calc(${p.y}% - 39px)`;
+
+        const num=document.createElement("div");
+        num.className="num"; num.textContent=String(i+1);
+
+        const star=document.createElement("div");
+        star.className="star";
+        star.textContent = done ? "✅" : (locked ? "🔒" : "✨");
+
+        node.appendChild(num); node.appendChild(star);
+
+        node.addEventListener("click",()=>{
+          if(locked){ beep("bad"); setStatus("Pos tersebut masih terkunci. Selesaikan pos sebelumnya terlebih dahulu."); return; }
+          if(done){ setStatus("Pos tersebut sudah selesai. Silakan lanjut ke pos berikutnya."); return; }
+          openQuiz(i);
+        });
+
+        map.appendChild(node);
+      }
+    }
+
+    function openQuiz(i){
+      STATE.qIndex=i; STATE.answered=false;
+      feedback.style.display="none";
+      btnContinue.disabled=true; btnContinue.textContent="Lanjut";
+      const q=QUESTIONS[i];
+      qTitle.textContent=`Soal ${i+1}`;
+      qTag.textContent=`Pos ${i+1}/10`;
+      qPrompt.textContent=q.prompt;
+
+      choices.innerHTML="";
+      const letters=["A","B","C","D"];
+      q.choices.forEach((text,idx)=>{
+        const c=document.createElement("div");
+        c.className="choice";
+        c.dataset.idx=String(idx);
+
+        const letter=document.createElement("div");
+        letter.className="letter";
+        letter.textContent=letters[idx]+".";
+
+        const span=document.createElement("div");
+        span.textContent=text;
+
+        c.appendChild(letter); c.appendChild(span);
+        c.addEventListener("click",()=>choose(idx,c));
+        choices.appendChild(c);
+      });
+
+      miniHint.textContent="Keterangan: Anda dapat menggunakan Pelindung sebelum menjawab.";      overlay.style.display="flex";
+      setStatus(`Soal pada Pos ${i+1} sedang dikerjakan.`);
+    }
+
+    function closeQuiz(){
+      overlay.style.display="none";
+      STATE.qIndex=null; STATE.answered=false;
+      if(STATE.restartPending){
+        STATE.restartPending = false;
+        resetGame();
+      }
+    }
+
+    function choose(idx, el){
+      if(STATE.answered) return;
+      STATE.answered=true;
+
+      const i=STATE.qIndex;
+      const q=QUESTIONS[i];
+
+      const all=[...choices.children];
+      all.forEach(c=>c.style.pointerEvents="none");
+
+      const correct=q.correct;
+      const isCorrect=(idx===correct);
+
+      all.forEach(c=>{
+        const j=Number(c.dataset.idx);
+        if(j===correct) c.classList.add("correct");
+      });
+      if(!isCorrect) el.classList.add("wrong");
+
+      if(isCorrect){
+        const comboBonus=clamp(STATE.streak*2,0,10);
+        STATE.score += 10 + comboBonus;
+        STATE.streak += 1;
+
+        STATE.done[i]=true;
+        STATE.progress += 1;
+        if(STATE.unlocked===i && i<9) STATE.unlocked=i+1;
+
+        fbMain.innerHTML = `✅ <b>Jawaban benar.</b> +${10+comboBonus} (bonus kombo: +${comboBonus})`;
+        fbExplain.textContent = q.explain;
+
+        spawnConfetti(true); beep("good");
+        setStatus(`Pos ${i+1} selesai. Silakan lanjut ke pos berikutnya.`);
+      }else{
+        STATE.streak = 0;
+        if(STATE.shieldActive){
+          STATE.shieldActive=false;
+          fbMain.innerHTML = `🛡️ <b>Pelindung aktif.</b> Nyawa tidak berkurang.`;
+          fbExplain.textContent = `Jawaban benar: ${["A","B","C","D"][correct]}. ${q.explain}`;
+        }else{
+          STATE.lives -= 1;
+          fbMain.innerHTML = `❌ <b>Jawaban belum tepat.</b> Nyawa berkurang 1.`;
+          if(STATE.lives<=0){
+            fbMain.innerHTML = `💥 <b>Nyawa habis.</b> Permainan akan diulang dari awal.`;
+          }
+          fbExplain.textContent = `Jawaban benar: ${["A","B","C","D"][correct]}. ${q.explain}`;
+        }
+        spawnConfetti(false); beep("bad");
+        if(STATE.lives<=0){
+          STATE.restartPending = true;
+          setStatus("Nyawa habis. Permainan akan diulang dari awal.");
+        }else{
+          setStatus("Silakan coba kembali pada pos yang sama.");
+        }
+      }
+
+      feedback.style.display="block";
+      btnContinue.disabled=false;
+
+      const best=bestScoreGet();
+      if(STATE.score>best) bestScoreSet(STATE.score);
+
+      setHUD(); renderMap();
+
+      if(STATE.progress===10){
+        setStatus("Seluruh pos telah selesai. Selamat, Anda berhasil menyelesaikan misi.");
+        btnContinue.textContent="Selesai";
+      }
+    }
+
+    btnQuit.addEventListener("click",()=>closeQuiz());
+    btnContinue.addEventListener("click",()=>closeQuiz());
+
+    btnSound.addEventListener("click",()=>{
+      STATE.sfxOn = !STATE.sfxOn;
+      setHUD();
+      if(STATE.sfxOn) beep("good");
+    });
+
+    btnMusic.addEventListener("click",()=>{
+      STATE.musicOn = !STATE.musicOn;
+      ensureAudio();
+      if(STATE.musicOn){
+        startMusic(); applyMusicVolume();
+        setStatus("Musik latar dinyalakan.");
+        beep("good");
+      }else{
+        stopMusic();
+        setStatus("Musik latar dimatikan.");
+      }
+      setHUD();
+    });
+
+    btnMuteQuick.addEventListener("click",()=>{
+      STATE.musicOn = false;
+      STATE.sfxOn = false;
+      stopMusic();
+      setHUD();
+      setStatus("Mode senyap diaktifkan (musik dan efek dimatikan).");
+    });
+
+    btnReset.addEventListener("click",()=>resetGame());
+
+    const INFO_CARDS = [
+      "📌 Persegi panjang: L = p × l. Persegi: L = s². Keliling persegi: K = 4s.",
+      "📌 Trapesium: L = ½(a+b)×t. Jika ditanya (a+b), gunakan (a+b)=2L/t.",
+      "📌 Belah ketupat dan layang-layang: L = ½×d1×d2 (pastikan dibagi 2).",
+      "📌 Disarankan: gunakan Pelindung saat ragu terhadap jawaban."
+    ];
+    let infoIdx=0;
+    btnInfo.addEventListener("click",()=>{
+      infoIdx=(infoIdx+1)%INFO_CARDS.length;
+      sideTips.innerHTML = `<b>Ringkasan materi:</b><br/>${INFO_CARDS[infoIdx]}`;
+      if(STATE.sfxOn) beep("good");
+      setStatus("Ringkasan materi diperbarui pada panel kanan.");
+    });
+
+    btnShield.addEventListener("click",()=>{
+      if(STATE.shieldActive){ setStatus("Pelindung sudah aktif."); return; }
+      if(STATE.shieldLeft<=0){ beep("bad"); setStatus("Pelindung sudah habis."); return; }
+      STATE.shieldLeft -= 1;
+      STATE.shieldActive = true;
+      miniHint.textContent="🛡️ Pelindung aktif: satu kesalahan berikutnya tidak akan mengurangi nyawa.";
+      setHUD(); beep("good");
+    });
+
+    setHUD(); renderMap();
+    setStatus("Siap memulai. Silakan kerjakan Pos 1.");
+  </script>
+</body>
+</html>
