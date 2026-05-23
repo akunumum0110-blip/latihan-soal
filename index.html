@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kuis Kanji JLPT N3</title>
+<title>Kuis Kata Kerja JLPT N3</title>
 <style>
   :root {
     /* Tema Dark Mode */
@@ -19,6 +19,7 @@
     --accent-hover: #2563eb;
     --success: #10b981;
     --danger: #ef4444;
+    --info: #0ea5e9;
     
     --border-color: #334155;
     --border-radius-md: 8px;
@@ -27,7 +28,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  
+
   body { 
     font-family: var(--font-sans); 
     background-color: var(--bg-body);
@@ -40,48 +41,19 @@
 
   .quiz-wrap { 
     width: 100%;
-    max-width: 600px; /* Ukuran pas untuk PC dan mengecil di HP */
+    max-width: 600px;
   }
 
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-  .title { font-size: 20px; font-weight: bold; color: var(--text-primary); }
-  .stats { display: flex; gap: 10px; }
-  .stat { 
-    background: var(--bg-card); 
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md); 
-    padding: 6px 12px; 
-    font-size: 14px; 
-    font-weight: bold;
-  }
-  .stat-correct { color: var(--success); }
-  .stat-wrong { color: var(--danger); }
-  .stat-progress { color: var(--accent); }
-
-  .progress-bar { height: 6px; background: var(--bg-card); border-radius: 6px; margin-bottom: 1.5rem; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--success); border-radius: 6px; transition: width 0.4s ease; }
-
-  .filter-row { display: flex; gap: 10px; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap; background: var(--bg-card); padding: 10px; border-radius: var(--border-radius-md); }
-  .filter-label { font-size: 14px; color: var(--text-secondary); }
-  select { 
-    font-size: 14px; padding: 8px 12px; border: 1px solid var(--border-color); 
-    border-radius: var(--border-radius-md); background: var(--bg-body); color: var(--text-primary); cursor: pointer; outline: none;
+  .header-title {
+    font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;
   }
 
   /* Gaya Dasar Tombol */
-  button {
-    font-family: inherit;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s ease;
-  }
-  button:active {
-    transform: translateY(2px); /* Efek ditekan */
-  }
+  button { font-family: inherit; cursor: pointer; border: none; transition: all 0.2s ease; outline: none; }
+  button:active:not(:disabled) { transform: translateY(2px); }
 
-  .mode-tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .mode-btn { 
-    padding: 8px 16px; font-size: 14px; font-weight: 500;
+    padding: 8px 14px; font-size: 13px; font-weight: 500;
     border: 1px solid var(--border-color); border-radius: var(--border-radius-md); 
     background: var(--bg-card); color: var(--text-secondary); 
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -89,379 +61,389 @@
   .mode-btn.active { background: var(--accent); color: white; border-color: var(--accent-hover); box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); }
   .mode-btn:hover:not(.active) { background: var(--bg-hover); color: var(--text-primary); }
 
-  #restart-top { margin-left: auto; background: var(--danger); color: white; border-color: var(--danger); }
-  #restart-top:hover { filter: brightness(1.1); }
+  .stat-container { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .stat-box { 
+    background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); 
+    padding: 10px 16px; text-align: center; flex: 1; min-width: 70px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  }
+  .stat-num { font-size: 22px; font-weight: bold; }
+  .stat-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+  
+  .text-success { color: var(--success); }
+  .text-danger { color: var(--danger); }
+  .text-accent { color: var(--accent); }
+  .text-info { color: var(--info); }
 
-  .card { 
-    background: var(--bg-card); 
-    border-radius: var(--border-radius-lg); 
+  .progress-bar-bg { background: var(--bg-card); border-radius: 99px; height: 6px; width: 100%; overflow: hidden; margin: 15px 0; }
+  .progress-bar-fill { height: 6px; border-radius: 99px; background: var(--success); transition: width 0.3s ease; }
+
+  .card-area {
+    background: var(--bg-card); border-radius: var(--border-radius-lg); 
     padding: 2.5rem 1.5rem; text-align: center; margin-bottom: 1.5rem; 
-    min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   }
-  .kanji-big { font-size: 80px; line-height: 1; color: white; font-weight: bold; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-  .hari-badge { font-size: 12px; font-weight: bold; color: var(--accent); background: rgba(59, 130, 246, 0.15); padding: 5px 12px; border-radius: 20px; }
-  .hint { font-size: 15px; color: var(--text-secondary); font-style: italic; }
-  .word-display { font-size: 28px; color: white; font-weight: 600; }
+  .card-big { font-size: 36px; font-weight: bold; color: white; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+  .card-hint { font-size: 15px; color: var(--text-secondary); font-style: italic; }
 
-  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
-  .opt { 
-    background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; 
-    padding: 16px 12px; font-size: 16px; font-weight: 500; color: var(--text-primary); 
-    min-height: 70px; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  .quiz-btn { 
+    padding: 14px 16px; border: 2px solid var(--border-color); border-radius: 12px; 
+    background: var(--bg-card); color: var(--text-primary); font-size: 15px; font-weight: 500; 
+    text-align: left; width: 100%; margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;
   }
-  .opt:hover:not(.disabled) { background: var(--bg-hover); border-color: var(--text-muted); transform: translateY(-2px); box-shadow: 0 6px 10px rgba(0,0,0,0.3); }
-  .opt.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--success); color: var(--success); box-shadow: none; }
-  .opt.wrong { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); color: var(--danger); box-shadow: none; }
-  .opt.disabled { cursor: default; transform: none; }
+  .quiz-btn:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--text-muted); transform: translateY(-2px); box-shadow: 0 6px 10px rgba(0,0,0,0.3); }
+  .quiz-btn:disabled { cursor: default; transform: none; box-shadow: none; }
+  
+  .quiz-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--success); color: var(--success); }
+  .quiz-btn.wrong { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); color: var(--danger); }
+  .quiz-btn.next { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; justify-content: center; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); animation: fadeIn 0.3s ease;}
+  .quiz-btn.next:hover { background: var(--accent-hover); }
 
-  .feedback { padding: 14px 16px; border-radius: var(--border-radius-md); font-size: 15px; font-weight: bold; margin-bottom: 1.5rem; display: none; text-align: center; }
-  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  /* Input untuk mode Isian */
+  .quiz-input {
+    width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: var(--border-radius-md);
+    background: var(--bg-body); color: white; font-size: 16px; margin-bottom: 12px; outline: none; transition: border-color 0.2s;
+  }
+  .quiz-input:focus { border-color: var(--accent); }
+  .quiz-input:disabled { opacity: 0.7; }
+
+  /* Feedback box untuk Isian & Flashcard */
+  .feedback { padding: 14px 16px; border-radius: var(--border-radius-md); font-size: 15px; font-weight: bold; margin-bottom: 12px; text-align: center; animation: fadeIn 0.3s ease; }
   .feedback.ok { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
   .feedback.bad { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid var(--danger); }
-
-  .next-btn { 
-    width: 100%; padding: 16px; font-size: 16px; font-weight: bold; border-radius: var(--border-radius-md); 
-    background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); display: none; 
-  }
-  .next-btn.show { display: block; animation: fadeIn 0.3s ease; }
-  .next-btn:hover { background: var(--accent-hover); }
-
-  .result-box { background: var(--bg-card); border-radius: var(--border-radius-lg); padding: 3rem 2rem; text-align: center; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-  .result-box.show { display: block; animation: fadeIn 0.5s ease; }
-  .result-score { font-size: 56px; font-weight: bold; color: white; margin: 1rem 0; }
-  .result-label { font-size: 18px; color: var(--text-secondary); margin-bottom: 2rem; }
-  
-  .restart-btn { 
-    padding: 12px 24px; border-radius: var(--border-radius-md); font-size: 15px; font-weight: bold; 
-    background: var(--bg-hover); color: white; border: 1px solid var(--border-color);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  }
-  .restart-btn:hover { background: var(--border-color); }
-  #ask-weak { background: var(--accent); color: white; border-color: var(--accent); }
-  #ask-weak:hover { background: var(--accent-hover); }
+  .flashcard-ans { padding: 1.5rem; border-radius: var(--border-radius-md); background: var(--bg-body); border: 1px solid var(--border-color); text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 15px; color: white; animation: fadeIn 0.3s ease; }
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* Responsif untuk layar HP kecil */
   @media (max-width: 480px) {
-    .options { grid-template-columns: 1fr; }
-    .kanji-big { font-size: 64px; }
-    .header { flex-direction: column; align-items: flex-start; gap: 15px; }
-    #restart-top { margin-left: 0; width: 100%; margin-top: 10px; padding: 10px; }
+    .stat-container { gap: 8px; }
+    .stat-box { padding: 8px 10px; }
+    .stat-num { font-size: 18px; }
+    .card-big { font-size: 30px; }
   }
 </style>
 </head>
 <body>
 
 <div class="quiz-wrap">
-  <h2 class="sr-only" style="display:none;">Kuis Kanji JLPT N3 interaktif</h2>
-  <div class="header">
-    <div class="title">⛩️ Kuis Kanji N3</div>
-    <div class="stats">
-      <div class="stat stat-correct">✓ <span id="correct-count">0</span></div>
-      <div class="stat stat-wrong">✗ <span id="wrong-count">0</span></div>
-      <div class="stat stat-progress"><span id="q-num">1</span>/<span id="q-total">20</span></div>
-    </div>
-  </div>
-
-  <div class="filter-row">
-    <span class="filter-label">Hari:</span>
-    <select id="hari-filter">
-      <option value="all">Semua</option>
-    </select>
-    <span class="filter-label">Jumlah soal:</span>
-    <select id="count-filter">
-      <option value="10">10</option>
-      <option value="20" selected>20</option>
-      <option value="30">30</option>
-      <option value="50">50</option>
-    </select>
-    <button class="mode-btn" id="restart-top">Mulai Ulang</button>
-  </div>
-
-  <div class="mode-tabs">
-    <button class="mode-btn active" data-mode="kanji-to-meaning">Kanji → Arti</button>
-    <button class="mode-btn" data-mode="meaning-to-kanji">Arti → Kanji</button>
-    <button class="mode-btn" data-mode="reading">Kanji → Bacaan</button>
-    <button class="mode-btn" data-mode="example">Contoh kata</button>
-  </div>
-
-  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
-
-  <div id="quiz-area">
-    <div class="card" id="question-card">
-      <div class="hari-badge" id="q-hari">Hari 1</div>
-      <div class="kanji-big" id="q-kanji">駐</div>
-      <div class="hint" id="q-hint"></div>
-    </div>
-    <div class="options" id="options-grid"></div>
-    <div class="feedback" id="feedback"></div>
-    <button class="next-btn" id="next-btn">Soal berikutnya →</button>
-  </div>
-
-  <div class="result-box" id="result-box">
-    <div style="font-size:16px;color:var(--text-secondary);margin-bottom:8px;font-weight:bold;">Skor Akhir</div>
-    <div class="result-score" id="result-score">0/20</div>
-    <div class="result-label" id="result-label"></div>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:1rem">
-      <button class="restart-btn" id="restart-btn">Ulangi kuis ini</button>
-      <button class="restart-btn" id="ask-weak">Lihat yang salah ↗</button>
-    </div>
-  </div>
+  <div class="header-title">🏃 Kuis Kata Kerja N3</div>
+  <div id="app"></div>
 </div>
 
 <script>
-const ALL_KANJI = [
-  {k:"駐",m:"berhenti/parkir",r:"CHUU",ex:"駐車",hari:1},{k:"無",m:"tidak ada",r:"MU / nai",ex:"無休・無料",hari:1},{k:"満",m:"penuh",r:"MAN",ex:"満車・満員",hari:1},{k:"向",m:"menghadap",r:"KOU / muko",ex:"向こう・方向",hari:1},{k:"関",m:"hubungan",r:"KAN",ex:"関する・関心",hari:1},{k:"係",m:"petugas",r:"KEI / kakari",ex:"係・関係",hari:1},{k:"禁",m:"larangan",r:"KIN",ex:"禁止・禁煙",hari:1},{k:"断",m:"menolak",r:"DAN / kotowaru",ex:"断る・無断",hari:1},
-  {k:"横",m:"samping",r:"OU / yoko",ex:"横断歩道",hari:2},{k:"押",m:"mendorong",r:"osu / osaeru",ex:"押す・押入れ",hari:2},{k:"式",m:"upacara",r:"SHIKI",ex:"入学式・数式",hari:2},{k:"飛",m:"terbang",r:"HI / tobu",ex:"飛ぶ・飛行場",hari:2},{k:"信",m:"percaya",r:"SHIN",ex:"信じる・自信",hari:2},{k:"号",m:"nomor",r:"GOU",ex:"信号・番号",hari:2},{k:"確",m:"pasti/benar",r:"KAKU / tashika",ex:"確かめる・確認",hari:2},{k:"認",m:"mengakui",r:"NIN / mitomeru",ex:"認める・確認",hari:2},
-  {k:"非",m:"tidak/bukan",r:"HI",ex:"非常・非常口",hari:3},{k:"常",m:"normal/biasa",r:"JOU",ex:"日常・正常",hari:3},{k:"階",m:"lantai",r:"KAI",ex:"階段・〇〇階",hari:3},{k:"段",m:"tangga",r:"DAN",ex:"階段",hari:3},{k:"危",m:"bahaya",r:"KI / abunai",ex:"危ない・危険",hari:3},{k:"険",m:"bahaya/terjal",r:"KEN",ex:"危険・険しい",hari:3},{k:"箱",m:"kotak",r:"hako",ex:"箱・ごみ箱",hari:3},{k:"捨",m:"membuang",r:"suteru",ex:"捨てる",hari:3},
-  {k:"線",m:"garis",r:"SEN",ex:"線・番線",hari:4},{k:"面",m:"permukaan/layar",r:"MEN",ex:"画面・全面",hari:4},{k:"普",m:"biasa",r:"FU",ex:"普通",hari:4},{k:"各",m:"setiap/masing",r:"KAKU",ex:"各駅・各自",hari:4},{k:"快",m:"menyenangkan/cepat",r:"KAI",ex:"快速・快適",hari:4},{k:"速",m:"cepat",r:"SOKU / hayai",ex:"速い・速度",hari:4},{k:"次",m:"berikutnya",r:"JI / tsugi",ex:"次・次回",hari:4},{k:"過",m:"lewat/lebih",r:"KA / sugiru",ex:"過ぎる・過去",hari:4},{k:"鉄",m:"besi",r:"TETSU",ex:"鉄道・地下鉄",hari:4},
-  {k:"指",m:"jari",r:"SHI / yubi",ex:"指・指輪",hari:5},{k:"定",m:"menentukan",r:"TEI",ex:"安定・指定席",hari:5},{k:"席",m:"kursi",r:"SEKI",ex:"席・出席",hari:5},{k:"由",m:"bebas/alasan",r:"YUU",ex:"自由・理由",hari:5},{k:"窓",m:"jendela",r:"mado",ex:"窓・窓口",hari:5},{k:"側",m:"sisi",r:"kawa",ex:"窓側・右側",hari:5},{k:"路",m:"jalan",r:"RO",ex:"道路・通路",hari:5},{k:"番",m:"nomor/urutan",r:"BAN",ex:"番号・番線",hari:5},
-  {k:"停",m:"berhenti",r:"TEI",ex:"停車・バス停",hari:6},{k:"整",m:"menata",r:"SEI",ex:"整理・整理券",hari:6},{k:"券",m:"tiket",r:"KEN",ex:"乗車券・回数券",hari:6},{k:"现",m:"muncul/sekarang",r:"GEN / arawareru",ex:"現れる・現金",hari:6},{k:"両",m:"keduanya",r:"RYOU",ex:"両親・両替",hari:6},{k:"替",m:"menukar",r:"kaeru",ex:"両替・着替える",hari:6},{k:"優",m:"baik hati/lembut",r:"YUU / yasashii",ex:"優しい・優先席",hari:6},{k:"座",m:"duduk",r:"ZA / suwaru",ex:"座る・座席",hari:6},{k:"降",m:"turun",r:"KOU / oriru",ex:"降りる・降る",hari:6},
-  {k:"未",m:"belum",r:"MI",ex:"未来・未定",hari:7},{k:"末",m:"akhir",r:"MATSU",ex:"週末・年末",hari:7},{k:"若",m:"muda",r:"wakai",ex:"若い",hari:7},{k:"晩",m:"malam",r:"BAN",ex:"晩ごはん・今晩",hari:7},{k:"皿",m:"piring",r:"sara",ex:"皿・灰皿",hari:7},{k:"血",m:"darah",r:"KETSU / chi",ex:"血・出血",hari:7},{k:"島",m:"pulau",r:"TOU / shima",ex:"島・〇〇島",hari:7},{k:"助",m:"pertolongan",r:"JO / tasukeru",ex:"助ける・救助",hari:7},
-  {k:"準",m:"semi/persiapan",r:"JUN",ex:"準備",hari:8},{k:"備",m:"persiapan",r:"BI / sonaeru",ex:"準備・備える",hari:8},{k:"営",m:"beroperasi",r:"EI",ex:"営業",hari:8},{k:"閉",m:"tutup",r:"HEI / shimeru",ex:"閉める・閉まる",hari:8},{k:"案",m:"usul/rencana",r:"AN",ex:"案・案内",hari:8},{k:"内",m:"dalam",r:"NAI / uchi",ex:"国内・案内",hari:8},{k:"予",m:"sebelumnya",r:"YO",ex:"予定・予習",hari:8},{k:"約",m:"kira-kira/janji",r:"YAKU",ex:"予約・約束",hari:8},
-  {k:"煙",m:"asap",r:"EN / kemuri",ex:"煙・禁煙",hari:9},{k:"当",m:"terkena/tepat",r:"TOU / ataru",ex:"本当・当たり前",hari:9},{k:"全",m:"semua",r:"ZEN",ex:"全部・全席",hari:9},{k:"客",m:"tamu",r:"KYAKU",ex:"客・お客様",hari:9},{k:"様",m:"keadaan/tuan",r:"YOU / sama",ex:"様子・お客様",hari:9},{k:"解",m:"memecahkan",r:"KAI",ex:"理解・解答",hari:9},{k:"協",m:"kerjasama",r:"KYOU",ex:"協力",hari:9},{k:"願",m:"memohon",r:"negau",ex:"願う",hari:9},
-  {k:"観",m:"melihat/pariwisata",r:"KAN",ex:"観光・観客",hari:10},{k:"園",m:"taman",r:"EN",ex:"動物園・公園",hari:10},{k:"港",m:"pelabuhan",r:"KOU / minato",ex:"港・空港",hari:10},{k:"遊",m:"bermain",r:"YUU / asobu",ex:"遊ぶ・遊園地",hari:10},{k:"美",m:"cantik/indah",r:"BI / utsukushii",ex:"美術館・美人",hari:10},{k:"術",m:"teknik/seni",r:"JUTSU",ex:"美術・技術",hari:10},{k:"神",m:"tuhan/dewa",r:"SHIN / kami",ex:"神社・神様",hari:10},{k:"寺",m:"wihara/kuil",r:"JI / tera",ex:"お寺・〇〇寺",hari:10},
-  {k:"役",m:"peran/berguna",r:"YAKU",ex:"市役所・役に立つ",hari:11},{k:"郵",m:"pos",r:"YUU",ex:"郵便・郵便局",hari:11},{k:"局",m:"kantor",r:"KYOKU",ex:"郵便局・薬局",hari:11},{k:"交",m:"bercampur/lalu lintas",r:"KOU",ex:"交番・交通",hari:11},{k:"差",m:"perbedaan",r:"SA / sasu",ex:"差・差し出す",hari:11},{k:"点",m:"titik/nilai",r:"TEN",ex:"交差点・点数",hari:11},{k:"橋",m:"jembatan",r:"KYOU / hashi",ex:"橋・歩道橋",hari:11},{k:"公",m:"umum/publik",r:"KOU",ex:"公園",hari:11},
-  {k:"受",m:"menerima",r:"JU / ukeru",ex:"受ける・受験",hari:12},{k:"付",m:"menempel",r:"tsuku / tsukeru",ex:"付く・受付",hari:12},{k:"科",m:"departemen/ilmu",r:"KA",ex:"科学・内科",hari:12},{k:"鼻",m:"hidung",r:"BI / hana",ex:"鼻・耳鼻科",hari:12},{k:"婦",m:"perempuan/istri",r:"FU",ex:"主婦・婦人",hari:12},{k:"骨",m:"tulang",r:"KOTSU / hone",ex:"骨・骨折",hari:12},{k:"折",m:"patah/melipat",r:"SETSU / oru",ex:"折る・左折",hari:12},{k:"形",m:"bentuk",r:"KEI / katachi",ex:"人形・図形",hari:12},
-  {k:"困",m:"bingung/kesulitan",r:"komaru",ex:"困る",hari:13},{k:"消",m:"mati/menghapus",r:"SHOU / kesu",ex:"消す・消える",hari:13},{k:"防",m:"menghalangi",r:"BOU / fusegu",ex:"防ぐ・予防",hari:13},{k:"救",m:"menyelamatkan",r:"KYUU / sukuu",ex:"救う・救急車",hari:13},{k:"警",m:"polisi/waspada",r:"KEI",ex:"警官・警察",hari:13},{k:"察",m:"memperjelas",r:"SATSU",ex:"警察・警察署",hari:13},{k:"故",m:"almarhum/kecelakaan",r:"KO",ex:"事故・故障",hari:13},{k:"伝",m:"menyampaikan",r:"DEN / tsutaeru",ex:"伝える・伝言",hari:13},
-  {k:"黄",m:"kuning",r:"ki",ex:"黄色",hari:14},{k:"絵",m:"gambar/lukisan",r:"KAI / e",ex:"絵・絵本",hari:14},{k:"組",m:"kelompok/pasangan",r:"kumu / kumi",ex:"組む・番組",hari:14},{k:"束",m:"ikatan/janji",r:"SOKU / taba",ex:"約束・花束",hari:14},{k:"授",m:"menerima/memberikan",r:"JU",ex:"授業・教授",hari:14},{k:"渡",m:"menyeberang",r:"wataru / watasu",ex:"渡る・渡す",hari:14},{k:"昔",m:"dahulu/masa lalu",r:"mukashi",ex:"昔",hari:14},
-  {k:"必",m:"pasti",r:"HITSU / kanarazu",ex:"必ず・必死",hari:15},{k:"要",m:"perlu",r:"YOU / iru",ex:"要る・必要",hari:15},{k:"冷",m:"dingin",r:"REI / tsumetai",ex:"冷やす・冷蔵庫",hari:15},{k:"蔵",m:"gudang/menyimpan",r:"ZO",ex:"冷蔵庫",hari:15},{k:"凍",m:"beku",r:"TOU / kooru",ex:"凍る・冷凍庫",hari:15},{k:"庫",m:"gudang/tempat simpan",r:"KO",ex:"冷蔵庫・車庫",hari:15},{k:"保",m:"menyimpan/menjaga",r:"HO",ex:"保存する",hari:15},{k:"存",m:"ada/keberadaan",r:"ZON",ex:"ご存知・存じる",hari:15},
-  {k:"費",m:"biaya",r:"HI",ex:"費用・旅費",hari:16},{k:"期",m:"periode/masa",r:"KI",ex:"期間・長期",hari:16},{k:"限",m:"batas",r:"GEN / kagiru",ex:"期限・限度",hari:16},{k:"賞",m:"hadiah",r:"SHOU",ex:"賞・賞金",hari:16},{k:"製",m:"membuat/buatan",r:"SEI",ex:"製品・製造",hari:16},{k:"造",m:"membuat/membangun",r:"ZOU / tsukuru",ex:"造る・製造",hari:16},{k:"法",m:"cara/hukum",r:"HOU",ex:"方法・文法",hari:16},{k:"温",m:"hangat/suhu",r:"ON / atatakai",ex:"温かい・温度",hari:16},
-  {k:"販",m:"penjualan",r:"HAN",ex:"販売・自動販売機",hari:17},{k:"機",m:"mesin",r:"KI",ex:"飛行機・機械",hari:17},{k:"増",m:"bertambah",r:"ZOU / fueru",ex:"増える・増加",hari:17},{k:"減",m:"berkurang",r:"GEN / heru",ex:"減る・減少",hari:17},{k:"量",m:"jumlah/banyaknya",r:"RYOU",ex:"量・数量",hari:17},{k:"氷",m:"es batu",r:"koori",ex:"氷",hari:17},{k:"返",m:"mengembalikan",r:"HEN / kaesu",ex:"返す・返事",hari:17},{k:"湯",m:"air hangat",r:"yu",ex:"お湯",hari:17},
-  {k:"材",m:"bahan",r:"ZAI",ex:"材料・教材",hari:18},{k:"卵",m:"telur",r:"tamago",ex:"卵・卵焼き",hari:18},{k:"乳",m:"susu",r:"NYUU",ex:"牛乳",hari:18},{k:"粉",m:"tepung",r:"kona / ko",ex:"粉・小麦粉",hari:18},{k:"袋",m:"kantong",r:"fukuro",ex:"袋・手袋",hari:18},{k:"混",m:"campur",r:"KON / mazeru",ex:"混ぜる・混雑",hari:18},{k:"焼",m:"membakar",r:"yaku / yakeru",ex:"焼く・焼ける",hari:18},{k:"表",m:"depan/bagan",r:"HYOU / omote",ex:"発表・代表",hari:18},{k:"裏",m:"belakang",r:"ura",ex:"裏・裏返す",hari:18},
-  {k:"留",m:"tinggal/belajar",r:"RYUU / tomeru",ex:"留学・留守",hari:19},{k:"守",m:"melindungi",r:"SHU / mamoru",ex:"守る・留守番",hari:19},{k:"濃",m:"pekat/kental",r:"koi",ex:"濃い",hari:19},{k:"薄",m:"tipis",r:"usui",ex:"薄い",hari:19},{k:"部",m:"bagian",r:"BU",ex:"部分・部長",hari:19},{k:"数",m:"jumlah/angka",r:"SUU / kazu",ex:"数える・数字",hari:19},{k:"件",m:"perihal",r:"KEN",ex:"事件・件名",hari:19},{k:"再",m:"lagi/kembali",r:"SAI / SA",ex:"再生・再来週",hari:19},
-  {k:"接",m:"hubungan",r:"SETSU",ex:"接続・面接",hari:20},{k:"続",m:"terus/berlanjut",r:"ZOKU / tsuzuku",ex:"続く・続ける",hari:20},{k:"示",m:"menunjukkan",r:"JI / shimeru",ex:"示す・指示",hari:20},{k:"戻",m:"kembali",r:"modoru / modosu",ex:"戻る・戻す",hari:20},{k:"完",m:"selesai/tamat",r:"KAN",ex:"完了・完全",hari:20},{k:"了",m:"berakhir",r:"RYOU",ex:"完了・了解",hari:20},{k:"登",m:"naik/mendaki",r:"TOU / noboru",ex:"登る・登山",hari:20},{k:"録",m:"catatan/rekaman",r:"ROKU",ex:"記録・録音",hari:20},
-  {k:"育",m:"mendidik/tumbuh",r:"IKU / sodateru",ex:"育てる・教育",hari:21},{k:"種",m:"benih/jenis",r:"SHU / tane",ex:"種・種類",hari:21},{k:"類",m:"macam/jenis",r:"RUI",ex:"種類・分類",hari:21},{k:"師",m:"ahli/guru",r:"SHI",ex:"教師・医師",hari:21},{k:"妻",m:"istri",r:"SAI / tsuma",ex:"妻・夫妻",hari:21},{k:"馬",m:"kuda",r:"BA / uma",ex:"馬・乗馬",hari:21},{k:"石",m:"batu",r:"SEKI / ishi",ex:"石・石けん",hari:21},
-  {k:"砂",m:"pasir/gula",r:"SA / suna",ex:"砂・砂糖",hari:22},{k:"塩",m:"garam",r:"EN / shio",ex:"塩・食塩",hari:22},{k:"油",m:"minyak",r:"YU / abura",ex:"油・石油",hari:22},{k:"緑",m:"hijau",r:"RYOKU / midori",ex:"緑・緑茶",hari:22},{k:"紅",m:"merah/lipstik",r:"KOU / beni",ex:"紅茶・口紅",hari:22},{k:"冊",m:"jilid/satuan buku",r:"SATSU",ex:"〜冊・冊数",hari:22},{k:"個",m:"satuan benda",r:"KO",ex:"〜個・個人",hari:22},{k:"枚",m:"lembar",r:"MAI",ex:"〜枚・枚数",hari:22},
-  {k:"告",m:"mengumumkan",r:"KOU",ex:"広告",hari:23},{k:"利",m:"keuntungan/pintar",r:"RI",ex:"便利・利用",hari:23},{k:"割",m:"pecah/diskon",r:"waru / wareru",ex:"割る・割引",hari:23},{k:"倍",m:"kali lipat",r:"BAI",ex:"〜倍・2倍",hari:23},{k:"値",m:"nilai/harga",r:"ne",ex:"値段・値上げ",hari:23},{k:"商",m:"berdagang",r:"SHOU",ex:"商品・商店",hari:23},{k:"支",m:"menopang/cabang",r:"SHI",ex:"支店・支社",hari:23},{k:"払",m:"membayar",r:"harau",ex:"払う・支払い",hari:23},
-  {k:"残",m:"sisa",r:"ZAN / nokoru",ex:"残す・残業",hari:24},{k:"型",m:"pola/tipe",r:"kata",ex:"大型・新型",hari:24},{k:"税",m:"pajak",r:"ZEI",ex:"税金・消費税",hari:24},{k:"込",m:"padat/termasuk",r:"komu",ex:"税込・振り込む",hari:24},{k:"価",m:"harga",r:"KA",ex:"価格・定価",hari:24},{k:"格",m:"kualitas/lulus",r:"KAKU",ex:"合格・格安",hari:24},{k:"米",m:"beras/Amerika",r:"BEI / kome",ex:"米・米国",hari:24},{k:"級",m:"level/derajat",r:"KYUU",ex:"高級・中級",hari:24},
-  {k:"申",m:"mengatakan (hormat)",r:"SHIN / mousu",ex:"申し込む",hari:25},{k:"記",m:"tulisan/catatan",r:"KI",ex:"記入・日記",hari:25},{k:"例",m:"contoh",r:"REI / tatoeru",ex:"例・例えば",hari:25},{k:"性",m:"jenis kelamin/sifat",r:"SEI",ex:"男性・性格",hari:25},{k:"齢",m:"usia",r:"REI",ex:"年齢・高齢",hari:25},{k:"歳",m:"tahun usia",r:"SAI",ex:"〜歳・二十歳",hari:25},{k:"連",m:"mengajak/berturut",r:"REN / tsureru",ex:"連休・連れて行く",hari:25},{k:"絡",m:"terhubung",r:"RAKU",ex:"連絡",hari:25},
-  {k:"届",m:"tiba/sampai",r:"todoku / todokeru",ex:"届く・届ける",hari:26},{k:"宅",m:"rumah",r:"TAKU",ex:"自宅・宅配",hari:26},{k:"配",m:"membagikan",r:"HAI / kubaru",ex:"配る・配達",hari:26},{k:"荷",m:"barang",r:"KA / ni",ex:"荷物・手荷物",hari:26},{k:"希",m:"harapan",r:"KI",ex:"希望",hari:26},{k:"望",m:"harapan/mengharap",r:"BOU / nozomu",ex:"希望・失望",hari:26},{k:"換",m:"menukar",r:"KAN / kaeru",ex:"交換・乗り換え",hari:26},{k:"額",m:"jumlah uang",r:"GAKU",ex:"金額・半額",hari:26},
-  {k:"在",m:"ada/keberadaan",r:"ZAI",ex:"不在・現在",hari:27},{k:"取",m:"mengambil",r:"toru",ex:"取る・受け取る",hari:27},{k:"預",m:"menitipkan",r:"YO / azukeru",ex:"預ける・預金",hari:27},{k:"参",m:"pergi (hormat)",r:"SAN / mairu",ex:"参る・参加",hari:27},{k:"達",m:"sampai/tiba",r:"TATSU",ex:"速達・友達",hari:27},{k:"衣",m:"pakaian",r:"I",ex:"衣類・衣服",hari:27},{k:"勤",m:"bekerja",r:"KIN / tsutomeru",ex:"通勤・勤める",hari:27},{k:"帯",m:"sabuk/zona",r:"TAI / obi",ex:"携帯・時間帯",hari:27},
-  {k:"戸",m:"pintu",r:"to",ex:"戸・戸棚",hari:28},{k:"湖",m:"danau",r:"KO / mizuumi",ex:"湖・びわ湖",hari:28},{k:"船",m:"kapal",r:"SEN / fune",ex:"船・船長",hari:28},{k:"角",m:"belokan/sudut",r:"KAKU / kado",ex:"角・角度",hari:28},{k:"夫",m:"suami",r:"FU / otto",ex:"夫・夫婦",hari:28},{k:"細",m:"detail/tipis",r:"hosoi / komakai",ex:"細い・細かい",hari:28},{k:"苦",m:"menyakitkan/pahit",r:"KU / niga",ex:"苦しい・苦手",hari:28},
-  {k:"礼",m:"hormat/terima kasih",r:"REI",ex:"お礼",hari:29},{k:"伺",m:"bertanya (hormat)",r:"ukagau",ex:"伺う",hari:29},{k:"遅",m:"lambat/terlambat",r:"CHI / osoi",ex:"遅い・遅刻",hari:29},{k:"失",m:"hilang/gagal",r:"SHITSU",ex:"失礼・失敗",hari:29},{k:"汗",m:"keringat",r:"ase",ex:"汗をかく",hari:29},{k:"念",m:"pikiran/peringatan",r:"NEN",ex:"残念・記念",hari:29},{k:"涙",m:"air mata",r:"namida",ex:"涙を流す",hari:29},{k:"笑",m:"tertawa",r:"warau / emu",ex:"笑う・笑顔",hari:29},
-  {k:"調",m:"mencari tahu",r:"CHOU / shiraberu",ex:"調べる・調子",hari:30},{k:"查",m:"investigasi",r:"SA",ex:"調査",hari:30},{k:"移",m:"pindah",r:"I / utsusu",ex:"移す・移動",hari:30},{k:"難",m:"sulit",r:"NAN / muzukashii",ex:"難しい・困難",hari:30},{k:"簡",m:"ringan/mudah",r:"KAN",ex:"簡単",hari:30},{k:"単",m:"sederhana/satuan",r:"TAN",ex:"簡単・単語",hari:30},{k:"感",m:"merasakan",r:"KAN",ex:"感じる・感動",hari:30},{k:"想",m:"pikiran/perkiraan",r:"SOU",ex:"感想・予想",hari:30},
-  {k:"練",m:"latihan",r:"REN",ex:"練習",hari:31},{k:"最",m:"paling",r:"SAI / motto",ex:"最近・最初",hari:31},{k:"適",m:"cocok/sesuai",r:"TEKI",ex:"適当・快適",hari:31},{k:"選",m:"memilih",r:"SEN / erabu",ex:"選ぶ・選挙",hari:31},{k:"違",m:"berbeda/salah",r:"chigau",ex:"違う・間違い",hari:31},{k:"辞",m:"berhenti/kamus",r:"JI / yameru",ex:"辞める・辞書",hari:31},{k:"直",m:"memperbaiki/lurus",r:"CHOKU / naosu",ex:"直す・直線",hari:31},{k:"復",m:"mengulang/pulih",r:"FUKU",ex:"復習・回復",hari:31},{k:"宿",m:"penginapan",r:"SHUKU / yado",ex:"宿・宿題",hari:31},
-  {k:"昨",m:"kemarin/lalu",r:"SAKU",ex:"昨日・昨年",hari:32},{k:"君",m:"kamu",r:"KUN / kimi",ex:"〇〇君・君",hari:32},{k:"結",m:"mengikat",r:"KETSU / musubu",ex:"結ぶ・結婚",hari:32},{k:"婚",m:"menikah",r:"KON",ex:"結婚・婚約",hari:32},{k:"祝",m:"perayaan",r:"SHUKU / iwau",ex:"祝う・祝日",hari:32},{k:"奥",m:"dalam/istri",r:"oku",ex:"奥・奥さん",hari:32},{k:"曲",m:"belok/lagu",r:"KYOKU / magaru",ex:"曲がる・曲",hari:32},{k:"寝",m:"tidur",r:"neru",ex:"寝る・昼寝",hari:32},
-  {k:"痛",m:"sakit",r:"TSUU / itai",ex:"痛い・頭痛",hari:33},{k:"熱",m:"panas/demam",r:"NETSU / atsui",ex:"熱い・熱",hari:33},{k:"虫",m:"serangga",r:"mushi",ex:"虫・虫歯",hari:33},{k:"歯",m:"gigi",r:"SHI / ha",ex:"歯・歯医者",hari:33},{k:"治",m:"sembuh/menyembuhkan",r:"JI / naosu",ex:"治す・治療",hari:33},{k:"汚",m:"kotor",r:"kitanai / yogoreru",ex:"汚い・汚れる",hari:33},{k:"並",m:"berjajar",r:"narabu / naraberu",ex:"並ぶ・並べる",hari:33},{k:"他",m:"lain",r:"TA",ex:"他の・その他",hari:33},
-  {k:"身",m:"badan/diri",r:"SHIN / mi",ex:"身長・身分",hari:34},{k:"酒",m:"sake/minuman",r:"SHU / sake",ex:"お酒・日本酒",hari:34},{k:"吸",m:"menghisap",r:"KYUU / suu",ex:"吸う・呼吸",hari:34},{k:"欲",m:"keinginan/ingin",r:"YOKU / hoshii",ex:"欲しい・食欲",hari:34},{k:"眠",m:"mengantuk/tidur",r:"MIN / nemui",ex:"眠い・睡眠",hari:34},{k:"疲",m:"lelah/capek",r:"tsukareru",ex:"疲れる",hari:34},{k:"息",m:"nafas",r:"iki",ex:"息・息子",hari:34},{k:"呼",m:"memanggil",r:"KO / yobu",ex:"呼ぶ・呼吸",hari:34},
-  {k:"泣",m:"menangis",r:"naku",ex:"泣く",hari:35},{k:"鳴",m:"berbunyi/bersuara",r:"naru / naku",ex:"鳴く・鳴る",hari:35},{k:"初",m:"pertama",r:"SHO / hajimete",ex:"初めて・最初",hari:35},{k:"泊",m:"menginap",r:"HAKU / tomaru",ex:"泊まる・宿泊",hari:35},{k:"葉",m:"daun",r:"YOU / ha",ex:"葉・言葉",hari:35},{k:"厚",m:"tebal",r:"atsui",ex:"厚い",hari:35},
-  {k:"報",m:"berita/laporan",r:"HO",ex:"予報・報告",hari:36},{k:"晴",m:"cerah",r:"hareru",ex:"晴れ・晴れる",hari:36},{k:"雲",m:"awan",r:"kumo",ex:"雲",hari:36},{k:"吹",m:"bertiup",r:"fuku",ex:"吹く",hari:36},{k:"暖",m:"hangat (cuaca)",r:"DAN / atatakain",ex:"暖かい・暖房",hari:36},{k:"雪",m:"salju",r:"yuki",ex:"雪",hari:36},{k:"震",m:"bergetar/gempa",r:"SHIN",ex:"地震・震度",hari:36},{k:"波",m:"ombak/gelombang",r:"HA / nami",ex:"波・津波",hari:36},
-  {k:"求",m:"meminta",r:"KYUU / motomeru",ex:"求める・求人",hari:37},{k:"募",m:"merekrut",r:"BO",ex:"募集",hari:37},{k:"職",m:"pekerjaan",r:"SHOKU",ex:"職場・職業",hari:37},{k:"容",m:"isi/wajah",r:"YOU",ex:"内容・美容院",hari:37},{k:"技",m:"teknik/keahlian",r:"GI",ex:"技術・技術者",hari:37},{k:"般",m:"umum",r:"HAN",ex:"一般・一般に",hari:37},{k:"務",m:"tugas/pekerjaan kantor",r:"MU",ex:"事務・公務員",hari:37},{k:"課",m:"bagian/bab",r:"KA",ex:"課長・第一課",hari:37},
-  {k:"球",m:"bola",r:"KYUU / tama",ex:"野球・地球",hari:38},{k:"決",m:"memutuskan",r:"KETSU / kimeru",ex:"決める・決勝",hari:38},{k:"勝",m:"menang",r:"SHOU / katsu",ex:"勝つ・優勝",hari:38},{k:"対",m:"berlawanan/versus",r:"TAI",ex:"反対・1対2",hari:38},{k:"流",m:"mengalir",r:"nagareru / nagasu",ex:"流す・流れる",hari:38},{k:"負",m:"kalah",r:"FU / makeru",ex:"負ける・勝負",hari:38},{k:"投",m:"melempar",r:"TOU / nageru",ex:"投げる・投手",hari:38},{k:"果",m:"buah/hasil",r:"KA",ex:"結果・果物",hari:38},
-  {k:"戦",m:"bertarung/perang",r:"SEN / tatakau",ex:"戦う・戦争",hari:39},{k:"経",m:"melalui/pengalaman",r:"KEI",ex:"経験・経営",hari:39},{k:"済",m:"selesai/ekonomi",r:"ZAI / sumu",ex:"済む・経済",hari:39},{k:"成",m:"menjadi/berhasil",r:"SAI",ex:"完成・成長",hari:39},{k:"貿",m:"perdagangan",r:"BOU",ex:"貿易",hari:39},{k:"易",m:"mudah",r:"EKI / yasashii",ex:"易しい・貿易",hari:39},{k:"輸",m:"mengirim/ekspor",r:"YU",ex:"輸出・輸入",hari:39},{k:"相",m:"saling/perdana menteri",r:"SOU / ai",ex:"相談・首相",hari:39},
-  {k:"化",m:"perubahan/budaya",r:"KA / KE",ex:"文化・化粧",hari:40},{k:"比",m:"perbandingan",r:"kurabe",ex:"比べる",hari:40},{k:"原",m:"asal/sumber",r:"GEN",ex:"原料・原因",hari:40},{k:"因",m:"penyebab",r:"IN",ex:"原因",hari:40},{k:"際",m:"bercampur/internasional",r:"SAI",ex:"国際・交際",hari:40},{k:"議",m:"pendapat/rapat",r:"GI",ex:"会議・議員",hari:40},{k:"活",m:"aktifitas/kehidupan",r:"KATSU",ex:"生活・活動",hari:40},{k:"変",m:"berubah",r:"HEN / kawaru",ex:"変わる・大変",hari:40},
-  {k:"政",m:"politik",r:"SEI",ex:"政治・政府",hari:41},{k:"府",m:"prefektur/pemerintahan",r:"FU",ex:"政府・都道府県",hari:41},{k:"改",m:"berubah/revisi",r:"KAI / aratameru",ex:"改める・改正",hari:41},{k:"実",m:"sebenarnya/percobaan",r:"JITSU",ex:"実は・実験",hari:41},{k:"欠",m:"kurang/absen",r:"KETSU / kakeru",ex:"欠ける・欠席",hari:41},{k:"専",m:"spesialis/khusus",r:"SEN",ex:"専門・専門家",hari:41},{k:"否",m:"tidak benar/menyangkal",r:"HI",ex:"否定",hari:41},{k:"的",m:"secara/-nya",r:"TEKI",ex:"国際的・目的",hari:41},
-  {k:"亡",m:"meninggal",r:"BOU / nai",ex:"死亡・亡くなる",hari:42},{k:"忙",m:"sibuk",r:"BOU / isogashii",ex:"忙しい・多忙",hari:42},{k:"忘",m:"lupa",r:"BOU / wasureru",ex:"忘れる・忘れ物",hari:42},{k:"祭",m:"festival",r:"SAI / matsuri",ex:"お祭り・文化祭",hari:42},{k:"情",m:"perasaan/informasi",r:"JOU",ex:"情報・感情",hari:42},{k:"反",m:"berlawanan",r:"HAN",ex:"反対",hari:42},{k:"労",m:"susah-payah",r:"ROU",ex:"苦労・労働者",hari:42},{k:"加",m:"bertambah/menambah",r:"KA / kuwaeru",ex:"加える・参加",hari:42}
+const allVerbs = [
+  ["あばれる","abareru","mengamuk, rusuh"],["浴びる","abiru","mandi, bermandi"],["あふれる","afureru","melimpah, meluap"],
+  ["上がる","agaru","naik, mendaki, bertambah"],["上げる","ageru","menaikkan, mengangkat"],["愛する","ai suru","mencintai"],
+  ["諦める","akirameru","menyerah"],["飽きる","akiru","jenuh"],["暗記する","anki suru","menghafal"],
+  ["争う","arasou","bertengkar, berdebat"],["現れる","arawareru","muncul"],["表す","arawasu","mengekspresikan"],
+  ["与える","ataeru","memberikan, mempersembahkan"],["当たる","ataru","kena"],["合う","au","cocok, sesuai"],
+  ["預かる","azukaru","menitip, mengawasi"],["預ける","azukeru","menitipkan, mempercayakan"],
+  ["爆発する","bakuhatsu suru","meledakkan"],["罰する","bassuru","menghukum"],["勉強する","benkyou suru","belajar"],
+  ["びっくりする","bikkuri suru","terkejut"],["分析する","bunseki suru","menganalisa"],["ぶつかる","butsukaru","menabrak, membentur"],
+  ["縮む","chijimu","menciut, susut"],["近づける","chikazukeru","mendekatkan"],["近づく","chikazuku","mendekati"],
+  ["遅刻する","chikoku suru","terlambat"],["散らかる","chirakaru","berantakan, berserakan"],["散る","chiru","berguguran, berserakan"],
+  ["貯金する","chokin suru","menabung"],["調査する","chousa suru","menyelidiki"],["注目する","chuumoku suru","memperhatikan"],
+  ["注文する","chuumon suru","memesan"],["抱く","daku/idaku","memeluk"],["黙る","damaru","berdiam, bungkam"],
+  ["出会う","deau","bertemu (pertama kali)"],["出来上がる","dekiagaru","selesai, menyelesaikan"],["出迎える","demukaeru","menjemput, menyambut"],
+  ["努力する","doryoku suru","berusaha keras"],["深まる","fukamaru","menjadi lebih dalam"],["深める","fukameru","memperdalam"],
+  ["吹く","fuku","bertiup"],["含む","fukumu","mencakup, mengandung"],["含める","fukumeru","memasukkan, mencakupkan"],
+  ["踏む","fumu","menginjak"],["触れる","fureru","menyentuh"],["振り込む","furikomu","mentransfer (uang)"],
+  ["振る","furu","mengayunkan, menaburkan"],["震える","furueru","menggigil, gemetaran"],["防ぐ","fusegu","menangkal"],
+  ["増やす","fuyasu","menambah, memperbanyak"],["外食する","gaishoku suru","makan di luar"],["外出する","gaishutsu suru","pergi keluar"],
+  ["がっかりする","gakkari suru","mengecewakan, berkecil hati"],["我慢する","gaman suru","bertahan, bersabar"],
+  ["議論する","giron suru","memperbincangkan"],["誤解する","gokai suru","salah paham"],["合格する","goukaku suru","lulus"],
+  ["生える","haeru","tumbuh"],["省く","habuku","meniadakan, menghemat"],["配達する","haitatsu suru","mengantarkan"],
+  ["発見する","hakken suru","menemukan, mendapati"],["掃く","haku","menyapu"],["はめる","hameru","memakai (cincin, sarung tangan)"],
+  ["離れる","hanareru","berpisah"],["話し合う","hanashiau","berbincang-bincang, berdiskusi"],["放す","hanasu","melepas"],
+  ["反対する","hantai suru","menentang, tidak setuju"],["発表する","happyou suru","mengumumkan"],["発展する","hatten suru","mengembangkan"],
+  ["生やす","hayasu","menumbuhkan, memelihara"],["外れる","hazureru","lepas, copot"],["外す","hazusu","melepaskan, menghilangkan"],
+  ["変化する","henka suru","mengubah"],["変更する","henkou suru","mengedit"],["減らす","herasu","mengurangi"],
+  ["減る","heru","berkurang"],["冷える","hieru","menjadi dingin"],["引き出す","hikidasu","menarik uang, menarik keluar"],
+  ["引っ越しする","hikkoshi suru","pindah rumah"],["ひねる","hineru","memeras, memelintir"],["冷やす","hiyasu","mendinginkan"],
+  ["微笑む","hohoemu","tersenyum"],["褒める","homeru","memuji"],["翻訳する","honyaku suru","menerjemahkan"],
+  ["保障する","hoshou suru","menjamin"],["ほっとする","hotto suru","lega"],["報告する","houkoku suru","melaporkan"],
+  ["訪問する","houmon suru","mengunjungi"],["放送する","housou suru","menyiarkan"],["保存する","hozon suru","mengawetkan, menyimpan"],
+  ["評価する","hyouka suru","mengevaluasi"],["祈る","inoru","berdoa, mendoakan"],["引退する","intai suru","pensiun, mengundurkan diri"],
+  ["イライラする","iraira suru","merasa kesal, jengkel"],["頂く","itadaku","menerima (sopan)"],["至る","itaru","tiba, datang"],
+  ["祝う","iwau","merayakan"],["嫌がる","iyagaru","merasa tak suka"],["邪魔する","jama suru","mengganggu, menghalang-halangi"],
+  ["実行する","jikkou suru","menjalankan, melaksanakan"],["受験する","juken suru","ikut ujian"],
+  ["被る","kaburu","memakai (untuk di kepala)"],["換える","kaeru","mengganti"],["変える","kaeru","mengubah"],
+  ["帰る","kaeru","pulang"],["輝く","kagayaku","bersinar"],["限る","kagiru","terbatas"],
+  ["快復する","kaifuku suru","memulihkan"],["開始する","kaishi suru","memulai"],["解決する","kaiketsu suru","menyelesaikan masalah"],
+  ["欠ける","kakeru","kekurangan"],["囲む","kakomu","mengepung"],["描く","kaku","melukis, menggambar"],
+  ["確認する","kakunin suru","mengkonfirmasi"],["隠れる","kakureru","bersembunyi"],["隠す","kakusu","menyembunyikan"],
+  ["噛む","kamu","menggigit"],["奏でる","kanaderu","memainkan (musik)"],["悲しむ","kanashimu","bersedih"],
+  ["感動する","kandou suru","terharu"],["歓迎する","kangei suru","menyambut"],["感じる","kanjiru","merasa"],
+  ["観光する","kankou suru","berwisata"],["管理する","kanri suru","mengurus, memanage"],["完了する","kanryou suru","selesai"],
+  ["観察する","kansatsu suru","mengamati"],["感謝する","kansha suru","berterima kasih"],["関する","kansuru","sehubungan dengan"],
+  ["稼ぐ","kasegu","memperoleh pendapatan"],["貸す","kasu","meminjamkan"],["語る","kataru","bercerita"],
+  ["飼う","kau","memberi makan, memelihara"],["乾かす","kawakasu","mengeringkan"],["乾く","kawaku","kering"],
+  ["変わる","kawaru","berubah, berbeda"],["数える","kazoeru","menghitung"],["経営する","keiei suru","mengelola"],
+  ["計画する","keikaku suru","merencanakan"],["経験する","keiken suru","berpengalaman"],["警告する","keikoku suru","memperingati"],
+  ["計算する","keisan suru","menghitung, menjabarkan"],["検査する","kensa suru","memeriksa"],["蹴る","keru","menendang, menyepak"],
+  ["決心する","kesshin suru","mengambil keputusan"],["結論する","ketsuron suru","menyimpulkan"],["決定する","kettei suru","menetapkan"],
+  ["気に入る","ki ni iru","menfavoritkan, suka"],["希望する","kibou suru","mengharapkan"],["気付く","kidzuku","menyadari"],
+  ["着替える","kigaeru","mengganti pakaian"],["聞き取る","kikitoru","menangkap percakapan"],["効く","kiku","efektif, ampuh"],
+  ["決まる","kimaru","telah diputuskan"],["決める","kimeru","memutuskan, menetapkan"],["緊張する","kinchou suru","gugup"],
+  ["気になる","ki ni naru","menjadi penasaran"],["禁止する","kinshi suru","melarang"],["記録する","kiroku suru","merekam, mencatat"],
+  ["期待する","kitai suru","mengharapkan"],["刻む","kizamu","mengiris, mengukir"],["こぼれる","koboreru","tumpah, meluap"],
+  ["こぼす","kobosu","menumpahkan"],["越える","koeru","melewati"],["凍える","kogoeru","membeku"],
+  ["好む","konomu","gemar, menyukai"],["混乱する","konran suru","kalut, melakukan kekacauan"],["婚約する","konyaku suru","bertunangan"],
+  ["転ぶ","korobu","terguling, terjatuh"],["殺す","korosu","membunuh"],["故障する","koshou suru","rusak"],
+  ["異なる","kotonaru","berlainan"],["断る","kotowaru","menolak"],["攻撃する","kougeki suru","menyerang"],
+  ["交換する","koukan suru","menukar"],["貢献する","kouken suru","berkontribusi"],["組む","kumu","berpasangan"],
+  ["訓練する","kunren suru","berlatih"],["比べる","kuraberu","membandingkan"],["暮らす","kurasu","hidup"],
+  ["繰り返す","kurikaesu","mengulang"],["包む","kurumu","membungkus"],["苦しむ","kurushimu","menderita"],
+  ["腐る","kusaru","membusuk"],["加える","kuwaeru","menambah, menambahkan"],["崩れる","kuzureru","runtuh, roboh"],
+  ["崩す","kuzusu","meruntuhkan, merobohkan"],["許可する","kyoka suru","mengizinkan"],["強調する","kyouchou suru","menekankan"],
+  ["競争する","kyousou suru","bersaing"],["協力する","kyouryoku suru","bekerja sama"],["間違える","machigaeru","melakukan kesalahan"],
+  ["間違う","machigau","salah, keliru"],["曲がる","magaru","membelok, bengkok"],["混じる","majiru","tercampur, bercampur"],
+  ["任せる","makaseru","menyerahkan"],["巻く","maku","melilit, menggulung"],["守る","mamoru","melindungi"],
+  ["学ぶ","manabu","belajar"],["真っ直ぐ","massugu","lurus"],["増す","masu","menambah"],
+  ["まとまる","matomaru","menyatu, terkumpul"],["まとめる","matomeru","menyatukan, mengumpulkan"],["回す","mawasu","mengelilingi, memutari"],
+  ["迷う","mayou","tersesat, bingung"],["混ぜる","mazeru","mencampur, mengaduk"],["目立つ","medatsu","mencolok"],
+  ["命じる","meijiru","memerintah"],["迷惑する","meiwaku suru","menyusahkan, membuat jengkel"],["見上げる","miageru","melihat ke atas"],
+  ["満ちる","michiru","penuh"],["磨く","migaku","menggosok"],["見直す","minaosu","meninjau kembali"],
+  ["見送る","miokuru","mengantarkan"],["診る","miru","memeriksa (pasien)"],["用いる","mochiiru","memakai, mempergunakan"],
+  ["戻る","modoru","kembali"],["戻す","modosu","mengembalikan"],["燃える","moeru","terbakar"],
+  ["貰う","morau","menerima"],["求める","motomeru","meminta"],["申し込む","moushikomu","mendaftar, melamar (pekerjaan)"],
+  ["燃やす","moyasu","membakar"],["迎える","mukaeru","menjemput"],["向ける","mukeru","menghadapkan, mengarahkan"],
+  ["向く","muku","menoleh, berpaling"],["無理する","muri suru","memaksakan diri"],["無視する","mushi suru","mengabaikan"],
+  ["蒸す","musu","mengukus"],["結ぶ","musubu","mengikat"],["撫でる","naderu","menelus, membelai"],
+  ["眺める","nagameru","memandang"],["流れる","nagareru","mengalir"],["流す","nagasu","mengalirkan"],
+  ["殴る","naguru","memukul, menjotos"],["亡くなる","nakunaru","meninggal dunia"],["怠ける","namakeru","bermalas-malasan"],
+  ["治る","naoru","sembuh, pulih"],["直る","naoru","betul, baik"],["成る","naru","menjadi"],
+  ["鳴る","naru","berbunyi, berdering"],["悩む","nayamu","bersusah hati, cemas"],["願う","negau","berharap"],
+  ["眠る","nemuru","tertidur, terlelap"],["寝る","neru","tidur"],["似合う","niau","cocok, sesuai"],
+  ["握る","nigiru","mengepal"],["似る","niru","menyerupai, mirip"],["似せる","niseru","meniru, memalsukan"],
+  ["伸ばす","nobasu","membentangkan"],["述べる","noberu","mengemukakan, menceritakan"],["伸びる","nobiru","membujur, memanjang"],
+  ["残る","nokoru","tertinggal, tersisa"],["残す","nokosu","menyisakan"],["乗り換える","norikaeru","berganti kendaraan"],
+  ["乗る","noru","naik (kendaraan)"],["乗せる","noseru","menaikkan (ke dalam kendaraan)"],["望む","nozomu","mengharapkan, berharap"],
+  ["抜ける","nukeru","terlepas, copot"],["抜く","nuku","mencabut"],["濡らす","nurasu","membasahi"],
+  ["濡れる","nureru","menjadi basah"],["塗る","nuru","mengolesi, mengecat"],["盗む","nusumu","mencuri"],
+  ["入学する","nyuugaku suru","masuk sekolah"],["溺れる","oboreru","tenggelam"],["落ちる","ochiru","jatuh, gagal (ujian)"],
+  ["落ち着く","ochitsuku","tenang"],["驚く","odoroku","terkejut, terheran"],["驚かす","odorokasu","mengejutkan"],
+  ["踊る","odoru","menari"],["終える","oeru","mengakhiri"],["行う","okonau","mengadakan, melaksanakan"],
+  ["起こる","okoru","terjadi, bangun"],["起こす","okosu","membangunkan, menimbulkan"],["贈る","okuru","mengirim (hadiah)"],
+  ["思い出す","omoidasu","mengingat, teringat"],["覆う","oou","menutupi"],["泳ぐ","oyogu","berenang"],
+  ["練習する","renshuu suru","melakukan praktik, berlatih"],["理解する","rikai suru","memahami"],["論じる","ronjiru","memperbincangkan, membahas"],
+  ["留学する","ryuugaku suru","sekolah di luar negeri"],["サボる","saboru","membolos"],["作業する","sagyou suru","bekerja"],
+  ["探す","sagasu","mencari"],["叫ぶ","sakebu","berteriak"],["避ける","sakeru","menghindar"],
+  ["咲く","saku","mekar, berbunga"],["覚める","sameru","terjaga, terbangun"],["参加する","sanka suru","bergabung"],
+  ["散歩する","sanpo suru","jalan-jalan"],["去る","saru","pergi, meninggalkan"],["支える","sasaeru","menyokong, menopang"],
+  ["誘う","sasou","mengajak, mengundang"],["指す","sasu","menunjuk"],["刺す","sasu","menamcap, menusuk"],
+  ["騒ぐ","sawagu","membuat keributan"],["触る","sawaru","menyentuh, meraba"],["成長する","seichou suru","tumbuh"],
+  ["制限する","seigen suru","membatasi"],["成功する","seikou suru","sukses"],["生産する","seisan suru","memproduksi"],
+  ["責める","semeru","menyalahkan"],["選択する","sentaku suru","memilih"],["洗濯する","sentaku suru","mencuci"],
+  ["仕上がる","shiagaru","rampung"],["仕上げる","shiageru","merampungkan"],["支配する","shihai suru","menjajah, menguasai"],
+  ["支払う","shiharau","membayar"],["叱る","shikaru","mengomeli, memarahi"],["しめる","shimeru","mengencangkan, memasang"],
+  ["示す","shimesu","menunjukan, mengindikasikan"],["進学する","shingaku suru","melanjutkan sekolah"],["心配する","shinpai suru","mengkhawatirkan"],
+  ["進歩する","shinpo suru","maju, berkembang"],["失敗する","shippai suru","gagal"],["知らせる","shiraseru","memberitahukan"],
+  ["従う","shitagau","mengikuti"],["失望する","shitsubou suru","kecewa"],["失業する","shitsugyou suru","menganggur"],
+  ["使用する","shiyou suru","menggunakan"],["処理する","shori suru","memproses, mengolah"],["承知する","shouchi suru","paham, mengerti"],
+  ["消費する","shouhi suru","mengkonsumsi"],["証明する","shoumei suru","membuktikan"],["招待する","shoutai suru","mengundang"],
+  ["出発する","shuppatsu suru","berangkat"],["出席する","shusseki suru","menghadiri"],["集中する","shuuchuu suru","berkonsentrasi"],
+  ["修理する","shuuri suru","memperbaiki, mereparasi"],["就職する","shuushoku suru","mencari pekerjaan"],["育てる","sodateru","membesarkan, mengasuh"],
+  ["育つ","sodatsu","tumbuh besar, berkembang"],["染める","someru","mewarnai, mencelup"],["備える","sonaeru","mempersiapkan"],
+  ["尊敬する","sonkei suru","menghormati"],["注ぐ","sosogu","menyeduh, menuang"],["卒業する","sotsugyou suru","lulus"],
+  ["相談する","soudan suru","berkonsultasi"],["掃除する","souji suru","bersih-bersih"],["滑る","suberu","tergelincir"],
+  ["優れる","sugureru","unggul, mengungguli"],["過ぎる","sugiru","melewati, melalui"],["過ごす","sugosu","menghabiskan, melewatkan"],
+  ["空く","suku","menjadi kosong"],["救う","sukuu","menyelamatkan"],["済む","sumu","selesai, cukup"],
+  ["進める","susumeru","memajukan"],["勧める","susumeru","mengajukan, menyarankan"],["立ち上がる","tachiagaru","berdiri, bangkit"],
+  ["退学する","taigaku suru","keluar dari sekolah"],["逮捕する","taiho suru","menangkap"],["高まる","takamaru","meninggi, naik, bertambah"],
+  ["高める","takameru","meninggikan, menaikkan"],["炊く","taku","menanak"],["ためる","tameru","mengumpulkan, menumpuk"],
+  ["試す","tamesu","mencoba"],["倒れる","taoreru","roboh, runtuh, tumbang"],["倒す","taosu","merobohkan, mengalahkan"],
+  ["足りる","tariru","cukup, mencukupi"],["確かめる","tashikameru","memastikan"],["助かる","tasukaru","terselamatkan"],
+  ["助ける","tasukeru","menolong, menyelamatkan"],["戦う","tatakau","bertarung"],["叩く","tataku","menabuk, mengetuk"],
+  ["建てる","tateru","mendirikan (banunan)"],["立てる","tateru","mendirikan"],["経つ","tatsu","berlalu, lewat (waktu)"],
+  ["立つ","tatsu","berdiri"],["頼る","tayoru","mengandalkan"],["訪ねる","tazuneru","mengunjungi"],
+  ["尋ねる","tazuneru","menanyakan, bertanya"],["提出する","teishutsu suru","mengajukan, menyerahkan"],["添付する","tenpu suru","melampirkan"],
+  ["飛ばす","tobasu","menerbangkan"],["飛ぶ","tobu","terbang"],["届ける","todokeru","menyampaikan, mengantarkan"],
+  ["届く","todoku","mencapai, sampai"],["問い合わせる","toiawaseru","bertanya, memastikan"],["閉じる","tojiru","menutup"],
+  ["解ける","tokeru","terpecahkan, terurai"],["解く","toku","memecahkan (masalah)"],["留める","tomeru","memaku, menahan"],
+  ["通る","tooru","lewat, melalui"],["通す","toosu","menembus"],["取り出す","toridasu","mengambil keluar"],
+  ["取り返す","torikaesu","menarik kembali"],["取り消す","torikesu","membatalkan"],["問う","tou","mempertanyakan"],
+  ["到着する","touchaku suru","tiba"],["登録する","touroku suru","mendaftar, mensubscribe"],
+  ["つぶれる","tsubureru","hancur"],["捕まえる","tsukamaeru","menangkap, menahan"],["掴む","tsukamu","memegang, menggenggam erat"],
+  ["疲れる","tsukareru","lelah, letih"],["付ける","tsukeru","memasang, menempelkan"],["付き合う","tsukiau","menemani, bergaul"],
+  ["就く","tsuku","menjabat"],["積もる","tsumoru","bertumpuk, bertimbun"],["繋がる","tsunagaru","tersambung, terhubung"],
+  ["繋ぐ","tsunagu","terhubung"],["連れる","tsureru","mengajak, menyertakan"],["伝える","tsutaeru","menyampaikan"],
+  ["伝わる","tsutawaru","tersampaikan"],["通じる","tsuujiru","terbuka (lalu lintas), berkomunikasi"],
+  ["続ける","tsudzukeru","melanjutkan, meneruskan"],["続く","tsudzuku","berlanjut, bersambung"],["奪う","ubau","merenggut"],
+  ["受かる","ukaru","diterima, lulus"],["受ける","ukeru","menerima"],["受け取る","uketoru","menerima, mengambil"],
+  ["浮く","uku","terampung, timbul"],["生まれる","umareru","lahir"],["埋める","umeru","mengubur"],
+  ["生む","umu","melahirkan"],["運動する","undou suru","berolah raga"],["運転する","unten suru","menyetir"],
+  ["裏切る","uragiru","berkhianat"],["売れる","ureru","terjual"],["失う","ushinau","kehilangan"],
+  ["撃つ","utsu","menembak"],["移る","utsuru","pindah, menular"],["訴える","uttaeru","menggugat, menuntut"],
+  ["別れる","wakareru","berpisah"],["沸かす","wakasu","mendidihkan"],["分ける","wakeru","membelah"],
+  ["笑う","warau","tertawa, tersenyum"],["割る","waru","membagi, memecah"],["破れる","yabureru","sobet, tercabik"],
+  ["破る","yaburu","merobek, mencabik"],["焼ける","yakeru","terbakar, terpanggang"],["焼く","yaku","membakar, memanggang"],
+  ["役に立つ","yaku ni tatsu","berguna, bermanfaat"],["約束する","yakusoku suru","berjanji, membuat janji"],
+  ["辞める","yameru","berhenti"],["止める","yameru","memberhentikan, mengakhiri"],["止む","yamu","berhenti, reda"],
+  ["やとう","yatou","menggaji, mempekerjakan"],["やる","yaru","mengerjakan, melakukan"],["予防する","yobou suru","mencegah"],
+  ["呼ぶ","yobu","memanggil"],["汚れる","yogoreru","menjadi kotor, tercemar"],["汚す","yogosu","mengotori, menodai"],
+  ["喜ぶ","yorokobu","bergembira, bersuka cita"],["寄る","yoru","mampir, singgah"],["予想する","yosou suru","memperkirakan"],
+  ["弱まる","yowamaru","melemah, menjadi lemah"],["弱める","yowameru","melemahkan, memperlemah"],["ゆでる","yuderu","merebus"],
+  ["許す","yurusu","memaafkan, mengizinkan"],["輸出する","yushutsu suru","mengekspor"],["優先する","yuusen suru","memprioritaskan"],
+  ["優勝する","yuushou suru","menjuarai, memenangi"],["譲る","yuzuru","mewariskan, menghibahkan"],
+  ["残業する","zangyou suru","bekerja lembur"],["ずらす","zurasu","menggeser, memindahkan"]
 ];
 
-let mode = "kanji-to-meaning";
-let questions = [];
-let current = 0;
-let correct = 0;
-let wrong = 0;
+let mode = 'pilihan'; // 'pilihan' | 'flashcard' | 'isian'
+let quizDir = 'jp-id'; // 'jp-id' | 'id-jp'
+let pool = [];
+let current = null;
+let choices = [];
 let answered = false;
-let wrongList = [];
-let filteredKanji = [...ALL_KANJI];
-let totalQ = 20;
+let score = 0;
+let total = 0;
+let streak = 0;
+let revealed = false;
+let wrongInput = false;
 
-const hariFilter = document.getElementById("hari-filter");
-const countFilter = document.getElementById("count-filter");
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-const haris = [...new Set(ALL_KANJI.map(k => k.hari))].sort((a,b)=>a-b);
-haris.forEach(h => {
-  const o = document.createElement("option");
-  o.value = h; o.textContent = `Hari ${h}`; hariFilter.appendChild(o);
-});
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+function pickVerb() {
+  if (pool.length === 0) pool = shuffle([...allVerbs]);
+  return pool.pop();
 }
 
-function getDistractors(correct, pool, count, field) {
-  const others = pool.filter(k => k[field] !== correct[field]);
-  return shuffle(others).slice(0, count).map(k => k[field]);
+function getChoices(correct) {
+  let opts = [correct];
+  const others = shuffle(allVerbs.filter(v => v[0] !== correct[0]));
+  for (let v of others) { if (opts.length < 4) opts.push(v); else break; }
+  return shuffle(opts);
 }
 
-function buildQuestions() {
-  const pool = filteredKanji.length >= 4 ? filteredKanji : ALL_KANJI;
-  const selected = shuffle(pool).slice(0, totalQ);
-  questions = selected.map(item => {
-    let q = {item, mode};
-    if (mode === "kanji-to-meaning") {
-      q.question = item.k;
-      q.answer = item.m;
-      q.options = shuffle([item.m, ...getDistractors(item, pool, 3, "m")]);
-      q.hint = "";
-    } else if (mode === "meaning-to-kanji") {
-      q.question = item.m;
-      q.answer = item.k;
-      q.options = shuffle([item.k, ...getDistractors(item, pool, 3, "k")]);
-      q.hint = "";
-    } else if (mode === "reading") {
-      q.question = item.k;
-      q.answer = item.r;
-      q.options = shuffle([item.r, ...getDistractors(item, pool, 3, "r")]);
-      q.hint = "";
-    } else {
-      q.question = item.k;
-      q.answer = item.ex;
-      q.options = shuffle([item.ex, ...getDistractors(item, pool, 3, "ex")]);
-      q.hint = item.m;
-    }
-    return q;
-  });
-  current = 0; correct = 0; wrong = 0; wrongList = [];
+function newQuestion() {
+  current = pickVerb();
+  choices = getChoices(current);
   answered = false;
+  revealed = false;
+  wrongInput = false;
+  render();
 }
 
-function render() {
-  const q = questions[current];
-  document.getElementById("q-num").textContent = current + 1;
-  document.getElementById("q-total").textContent = questions.length;
-  document.getElementById("correct-count").textContent = correct;
-  document.getElementById("wrong-count").textContent = wrong;
-  document.getElementById("progress").style.width = ((current / questions.length) * 100) + "%";
-
-  const card = document.getElementById("question-card");
-  card.innerHTML = "";
-
-  const badge = document.createElement("div");
-  badge.className = "hari-badge";
-  badge.textContent = `Hari ${q.item.hari}`;
-  card.appendChild(badge);
-
-  const mainEl = document.createElement("div");
-  if (mode === "kanji-to-meaning" || mode === "reading" || mode === "example") {
-    mainEl.className = "kanji-big";
-    mainEl.textContent = q.question;
-  } else {
-    mainEl.className = "word-display";
-    mainEl.textContent = q.question;
-  }
-  card.appendChild(mainEl);
-
-  if (q.hint) {
-    const h = document.createElement("div");
-    h.className = "hint";
-    h.textContent = "Arti: " + q.hint;
-    card.appendChild(h);
-  }
-  if (mode === "reading") {
-    const sub = document.createElement("div");
-    sub.className = "hint";
-    sub.textContent = "Bagaimana cara bacanya?";
-    card.appendChild(sub);
-  }
-  if (mode === "example") {
-    const sub = document.createElement("div");
-    sub.className = "hint";
-    sub.textContent = "Pilih contoh kata yang benar";
-    card.appendChild(sub);
-  }
-
-  const grid = document.getElementById("options-grid");
-  grid.innerHTML = "";
-  q.options.forEach(opt => {
-    const btn = document.createElement("button");
-    btn.className = "opt";
-    btn.textContent = opt;
-    btn.onclick = () => choose(btn, opt, q);
-    grid.appendChild(btn);
-  });
-
-  document.getElementById("feedback").className = "feedback";
-  document.getElementById("feedback").textContent = "";
-  document.getElementById("next-btn").className = "next-btn";
-  document.getElementById("result-box").className = "result-box";
-  document.getElementById("quiz-area").style.display = "block";
-  answered = false;
-}
-
-function choose(btn, val, q) {
+function answerChoice(v) {
   if (answered) return;
   answered = true;
-  const isCorrect = val === q.answer;
-  if (isCorrect) {
-    correct++;
-    btn.classList.add("correct");
-    document.getElementById("correct-count").textContent = correct;
-  } else {
-    wrong++;
-    btn.classList.add("wrong");
-    wrongList.push(q.item);
-    document.getElementById("wrong-count").textContent = wrong;
-    document.querySelectorAll(".opt").forEach(b => {
-      if (b.textContent === q.answer) b.classList.add("correct");
+  total++;
+  if (v[0] === current[0]) { score++; streak++; } else { streak = 0; }
+  render();
+}
+
+function checkInput() {
+  const val = document.getElementById('ans-input').value.trim().toLowerCase();
+  const correct = (quizDir === 'jp-id') ? current[2].toLowerCase() : (current[0] + ' / ' + current[1]).toLowerCase();
+  const altCorrect = current[2].toLowerCase().split(',').map(s=>s.trim());
+  const isCorrect = altCorrect.some(a => val.includes(a.split(' ')[0]) || a.includes(val)) || val === current[1].toLowerCase() || val === current[0];
+  if (!answered) {
+    answered = true;
+    total++;
+    if (isCorrect) { score++; streak++; wrongInput = false; }
+    else { streak = 0; wrongInput = true; }
+    render();
+    if (isCorrect) setTimeout(newQuestion, 1000);
+  }
+}
+
+function setMode(m) { mode = m; newQuestion(); }
+function setDir(d) { quizDir = d; newQuestion(); }
+
+function progressPct() { return total === 0 ? 0 : Math.round((score / total) * 100); }
+
+function render() {
+  const app = document.getElementById('app');
+  if (!current) { newQuestion(); return; }
+
+  const qJp = current[0], qRom = current[1], qId = current[2];
+  const question = quizDir === 'jp-id' ? qJp : qId;
+  const questionSub = quizDir === 'jp-id' ? qRom : '';
+
+  let html = `
+  <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;">
+    <button class="mode-btn ${mode==='pilihan'?'active':''}" onclick="setMode('pilihan')">Pilihan Ganda</button>
+    <button class="mode-btn ${mode==='isian'?'active':''}" onclick="setMode('isian')">Isian</button>
+    <button class="mode-btn ${mode==='flashcard'?'active':''}" onclick="setMode('flashcard')">Flashcard</button>
+    <button class="mode-btn ${quizDir==='jp-id'?'active':''}" onclick="setDir('jp-id')" style="margin-left:auto;">JP → ID</button>
+    <button class="mode-btn ${quizDir==='id-jp'?'active':''}" onclick="setDir('id-jp')">ID → JP</button>
+  </div>
+  
+  <div class="stat-container">
+    <div class="stat-box"><div class="stat-num text-success">${score}</div><div class="stat-lbl">BENAR</div></div>
+    <div class="stat-box"><div class="stat-num text-danger">${total-score}</div><div class="stat-lbl">SALAH</div></div>
+    <div class="stat-box"><div class="stat-num text-accent">${total>0?progressPct()+'%':'—'}</div><div class="stat-lbl">AKURASI</div></div>
+    <div class="stat-box"><div class="stat-num text-info">${streak}</div><div class="stat-lbl">STREAK 🔥</div></div>
+  </div>
+  
+  <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${progressPct()}%"></div></div>
+  
+  <div class="card-area">
+    <div class="card-big">${question}</div>
+    ${questionSub?`<div class="card-hint">${questionSub}</div>`:'<div style="height:12px"></div>'}
+  </div>`;
+
+  if (mode === 'pilihan') {
+    choices.forEach(v => {
+      const label = quizDir === 'jp-id' ? v[2] : v[0];
+      let cls = '';
+      if (answered) {
+        if (v[0] === current[0]) cls = 'correct';
+        else if (v[0] !== current[0]) cls = 'wrong';
+      }
+      html += `<button class="quiz-btn ${cls}" onclick="answerChoice([${v.map(x=>`'${x.replace(/'/g,"\'")}'`)}])" ${answered?'disabled':''}>${label}</button>`;
     });
-  }
-  document.querySelectorAll(".opt").forEach(b => b.classList.add("disabled"));
-
-  const fb = document.getElementById("feedback");
-  fb.className = "feedback show " + (isCorrect ? "ok" : "bad");
-  if (isCorrect) {
-    fb.textContent = "✓ Benar! " + q.item.k + " (" + q.item.r + ") = " + q.item.m;
-  } else {
-    fb.textContent = "✗ Jawaban: " + q.answer + " | " + q.item.k + " = " + q.item.m + " [" + q.item.r + "]";
+    if (answered) html += `<button class="quiz-btn next" onclick="newQuestion()">Soal berikutnya →</button>`;
   }
 
-  document.getElementById("next-btn").className = "next-btn show";
+  else if (mode === 'isian') {
+    const placeholder = quizDir === 'jp-id' ? 'Tulis arti dalam Bahasa Indonesia...' : 'Tulis kanji atau romaji...';
+    html += `<input id="ans-input" class="quiz-input" type="text" placeholder="${placeholder}" ${answered?'disabled':''} onkeydown="if(event.key==='Enter')checkInput()">`;
+    
+    if (!answered) {
+        html += `<button class="quiz-btn next" onclick="checkInput()">Cek jawaban</button>`;
+    } else {
+      if (wrongInput) {
+        html += `<div class="feedback bad">Jawaban benar:<br><span style="font-size:18px;margin-top:5px;display:inline-block">${quizDir==='jp-id'?qId:qJp+' ('+qRom+')'}</span></div>`;
+      } else {
+        html += `<div class="feedback ok">Benar! ✓</div>`;
+      }
+      html += `<button class="quiz-btn next" onclick="newQuestion()">Soal berikutnya →</button>`;
+    }
+  }
+
+  else if (mode === 'flashcard') {
+    if (!revealed) {
+      html += `<button class="quiz-btn next" onclick="revealFlashcard()">Tampilkan jawaban</button>`;
+    } else {
+      const ans = quizDir === 'jp-id' ? `${qId}<br><span style='font-size:14px;color:var(--text-secondary);font-weight:normal'>${qRom}</span>` : `${qJp}<br><span style='font-size:16px;color:var(--text-secondary);font-weight:normal'>${qRom}</span>`;
+      html += `<div class="flashcard-ans">${ans}</div>`;
+      html += `<div style="display:flex;gap:12px;">
+        <button class="quiz-btn correct" style="flex:1;justify-content:center" onclick="rateCard(true)">Tahu ✓</button>
+        <button class="quiz-btn wrong" style="flex:1;justify-content:center" onclick="rateCard(false)">Tidak tahu ✗</button>
+      </div>`;
+    }
+  }
+
+  app.innerHTML = html;
+  if (mode === 'isian' && !answered) {
+    const inp = document.getElementById('ans-input');
+    if (inp) inp.focus();
+  }
 }
 
-document.getElementById("next-btn").onclick = () => {
-  current++;
-  if (current >= questions.length) showResult();
-  else render();
-};
-
-function showResult() {
-  document.getElementById("quiz-area").style.display = "none";
-  document.getElementById("result-box").className = "result-box show";
-  document.getElementById("result-score").textContent = correct + "/" + questions.length;
-  document.getElementById("progress").style.width = "100%";
-  const pct = Math.round((correct / questions.length) * 100);
-  const labels = ["Tetap semangat! 💪", "Lumayan, terus berlatih! 👍", "Bagus sekali! 🌸", "Luar biasa! ほぼ完璧！✨"];
-  document.getElementById("result-label").textContent = pct < 50 ? labels[0] : pct < 70 ? labels[1] : pct < 90 ? labels[2] : labels[3];
-  document.getElementById("ask-weak").onclick = () => {
-    const wl = wrongList.map(w => w.k + " (" + w.m + ")").join(", ");
-    alert("Kamu bisa mempelajari lagi kanji berikut:\n\n" + wl);
-  };
+function revealFlashcard() { revealed = true; render(); }
+function rateCard(knew) {
+  total++;
+  if (knew) { score++; streak++; } else { streak = 0; }
+  newQuestion();
 }
 
-document.getElementById("restart-btn").onclick = () => {
-  buildQuestions(); render();
-};
-document.getElementById("restart-top").onclick = () => {
-  const h = hariFilter.value;
-  totalQ = parseInt(countFilter.value);
-  filteredKanji = h === "all" ? [...ALL_KANJI] : ALL_KANJI.filter(k => k.hari == h);
-  buildQuestions(); render();
-};
-hariFilter.onchange = () => {
-  const h = hariFilter.value;
-  filteredKanji = h === "all" ? [...ALL_KANJI] : ALL_KANJI.filter(k => k.hari == h);
-};
-countFilter.onchange = () => { totalQ = parseInt(countFilter.value); };
-
-document.querySelectorAll(".mode-btn[data-mode]").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".mode-btn[data-mode]").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    mode = btn.dataset.mode;
-    buildQuestions(); render();
-  };
-});
-
-buildQuestions();
-render();
+pool = shuffle([...allVerbs]);
+newQuestion();
 </script>
+
 </body>
 </html>
